@@ -6,14 +6,12 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
       Schema::create('subscription_plans', function (Blueprint $table) {
     $table->id();
     $table->string('name');
+    $table->string('icon')->nullable();
     $table->text('description')->nullable();
     $table->decimal('price', 12, 2);
     $table->integer('duration_days');
@@ -26,9 +24,7 @@ return new class extends Migration
 });
     }
 
-    /**
-     * Reverse the migrations.
-     */
+   
     public function down(): void
     {
         Schema::dropIfExists('subscription_plans');

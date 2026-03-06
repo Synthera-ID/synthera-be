@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
        Schema::create('payments', function (Blueprint $table) {
@@ -22,8 +19,10 @@ return new class extends Migration
           ->constrained()
           ->onDelete('cascade');
 
-    $table->string('payment_method', 50);
-    $table->string('payment_reference', 100);
+    $table->enum('payment_method', ['credit_card', 'bank_transfer', 'e_wallet']);
+    
+    $table->string('payment_gateway', 50);
+    $table->string('gateway_ref', 100)->nullable();
 
     $table->decimal('amount', 12, 2);
 

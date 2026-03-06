@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
+            $table->string('invoice_code',50)->unique();
 
             $table->foreignId('user_id')
                   ->constrained()

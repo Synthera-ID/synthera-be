@@ -27,6 +27,7 @@ return new class extends Migration
     $table->date('end_date');
 
     $table->boolean('auto_renew')->default(false);
+    $table->timestamp('cancelled_at')->nullable();
 
     $table->timestamps();
 });
@@ -37,6 +38,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('membership');
+      Schema::dropIfExists('memberships');
     }
 };

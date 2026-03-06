@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-      Schema::create('course_categories', function (Blueprint $table) {
+     Schema::create('course_categories', function (Blueprint $table) {
     $table->id();
-    $table->string('name');
-    $table->string('slug')->unique();
+    $table->string('title', 200);
+    $table->string('slug', 200)->unique();
     $table->text('description')->nullable();
-    $table->boolean('is_active')->default(true);
+    $table->string('thumbnail_url', 500)->nullable();
     $table->timestamps();
 });
     }
