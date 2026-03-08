@@ -23,7 +23,7 @@ return new class extends Migration
     $table->date('valid_until');
     $table->boolean('is_active')->default(true);
     $table->timestamps();
-});
+}); 
 
     }
 

@@ -14,7 +14,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('icon', 50)->nullable();
             $table->boolean('is_active')->default(true);
-        });
+        }); 
     }
 
     public function down(): void
