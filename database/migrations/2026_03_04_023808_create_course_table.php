@@ -6,28 +6,36 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-       Schema::create('courses', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('category_id')->constrained('course_categories')->onDelete('cascade');
-    $table->string('title');
-    $table->string('slug')->unique();
-    $table->text('description')->nullable();
-    $table->integer('duration');
-    $table->boolean('is_published')->default(false);
-    $table->timestamps();
-});
+        Schema::create('courses', function (Blueprint $table) {
+            $table->id(); // bigint primary key
+            
+            $table->unsignedBigInteger('category_id'); // foreign key
+            
+            $table->string('title', 200);
+            $table->string('slug', 200)->unique();
+            $table->text('description')->nullable();
+            
+            $table->string('thumbnail_url', 500)->nullable();
+            $table->string('content_url', 500)->nullable();
+            
+            $table->enum('min_tier', ['basic', 'pro', 'exclusive']);
+            
+            $table->boolean('is_published')->default(false);
+            
+            $table->timestamp('created_at')->useCurrent();
+
+            // foreign key relation
+            $table->foreign('category_id')
+                  ->references('id')
+                  ->on('course_categories')
+                  ->onDelete('cascade');
+        });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('course');
+        Schema::dropIfExists('courses');
     }
 };
