@@ -22,7 +22,14 @@ return new class extends Migration
     $table->date('valid_from');
     $table->date('valid_until');
     $table->boolean('is_active')->default(true);
-    $table->timestamps();
+    $table->string('CompanyCode', 32)->nullable();
+    $table->tinyInteger('Status')->default(1);
+    $table->tinyInteger('IsDeleted')->default(0);
+    $table->string('CreatedBy', 32)->nullable();
+    $table->dateTime('CreatedDate')->nullable();
+    $table->string('LastUpdateBy', 32)->nullable();
+    $table->dateTime('LastUpdateDate')->nullable();
+    
 }); 
 
     }

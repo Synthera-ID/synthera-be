@@ -15,7 +15,7 @@ return new class extends Migration
             
             $table->string('title', 200);
             $table->string('slug', 200)->unique();
-            $table->text('description')->nullable();
+            $table->text('description');
             
             $table->string('thumbnail_url', 500)->nullable();
             $table->string('content_url', 500)->nullable();
@@ -24,7 +24,13 @@ return new class extends Migration
             
             $table->boolean('is_published')->default(false);
             
-            $table->timestamp('created_at')->useCurrent();
+            $table->string('CompanyCode', 32)->nullable();
+            $table->tinyInteger('Status')->default(1);
+            $table->tinyInteger('IsDeleted')->default(0);
+            $table->string('CreatedBy', 32)->nullable();
+            $table->dateTime('CreatedDate')->nullable();
+            $table->string('LastUpdateBy', 32)->nullable();
+            $table->dateTime('LastUpdateDate')->nullable();
 
             // foreign key relation
             $table->foreign('category_id')

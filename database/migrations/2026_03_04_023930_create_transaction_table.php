@@ -19,14 +19,27 @@ return new class extends Migration
             $table->foreignId('plan_id')
                   ->constrained('subscription_plans')
                   ->onDelete('cascade');
+            
+            $table->foreignId('discount_id')
+                  ->nullable()
+                  ->constrained('discounts')
+                  ->onDelete('set null');
 
             $table->decimal('amount', 12, 2);
             $table->decimal('discount_amount', 12, 2);
             $table->decimal('final_amount', 12, 2);
 
-            $table->enum('status', ['pending', 'paid', 'failed', 'refunded']);
+            $table->enum('transaction_status', ['pending', 'paid', 'failed', 'refunded']);
 
             $table->text('notes')->nullable();
+            $table->string('CompanyCode', 32)->nullable();
+            $table->tinyInteger('Status')->default(1);  
+            $table->tinyInteger('IsDeleted')->default(0);
+            $table->string('CreatedBy', 32)->nullable();
+            $table->dateTime('CreatedDate')->nullable();
+            $table->string('LastUpdateBy', 32)->nullable();
+            $table->dateTime('LastUpdateDate')->nullable();
+
 
             $table->timestamps();  
         });

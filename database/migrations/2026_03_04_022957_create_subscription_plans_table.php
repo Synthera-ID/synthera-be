@@ -10,9 +10,8 @@ return new class extends Migration
     {
       Schema::create('subscription_plans', function (Blueprint $table) {
     $table->id();
-    $table->string('name');
-    $table->string('icon')->nullable();
-    $table->text('description')->nullable();
+    $table->string('name', 100);
+    $table->text('description');
     $table->decimal('price', 12, 2);
     $table->integer('duration_days');
     $table->enum('tier', ['basic','pro','exclusive']);
@@ -20,7 +19,14 @@ return new class extends Migration
     $table->integer('api_daily_limit')->nullable();
     $table->integer('api_rate_limit')->nullable();
     $table->boolean('is_active')->default(true);
-    $table->timestamps();
+
+    $table->string('CompanyCode', 32)->nullable();
+    $table->tinyInteger('Status')->default(1);
+    $table->tinyInteger('IsDeleted')->default(0);
+    $table->string('CreatedBy', 32)->nullable();
+    $table->dateTime('CreatedDate')->nullable();
+    $table->string('LastUpdateBy', 32)->nullable();
+    $table->dateTime('LastUpdateDate')->nullable();
 });
     }
 

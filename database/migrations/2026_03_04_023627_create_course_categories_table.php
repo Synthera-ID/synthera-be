@@ -11,9 +11,16 @@ return new class extends Migration
             $table->id(); // bigint primary key
             $table->string('name', 100);
             $table->string('slug', 100)->unique();
-            $table->text('description')->nullable();
+            $table->text('description');
             $table->string('icon', 50)->nullable();
             $table->boolean('is_active')->default(true);
+            $table->string('CompanyCode', 32)->nullable();
+            $table->tinyInteger('Status')->default(1);
+            $table->tinyInteger('IsDeleted')->default(0);
+            $table->string('CreatedBy', 32)->nullable();
+            $table->dateTime('CreatedDate')->nullable();
+            $table->string('LastUpdateBy', 32)->nullable();
+            $table->dateTime('LastUpdateDate')->nullable();
         }); 
     }
 

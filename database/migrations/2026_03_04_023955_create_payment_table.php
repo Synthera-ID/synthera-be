@@ -21,14 +21,21 @@ return new class extends Migration
 
     $table->enum('payment_method', ['credit_card', 'bank_transfer', 'e_wallet']);
     
-    $table->string('payment_gateway', 50);
+    $table->string('payment_gateway', 100);
     $table->string('gateway_ref', 100)->nullable();
 
     $table->decimal('amount', 12, 2);
 
-    $table->enum('status', ['pending', 'success', 'failed']);
+    $table->enum('payment_status', ['pending', 'success', 'failed']);
 
-    $table->timestamp('paid_at')->nullable();
+    $table->dateTime('paid_at');
+    $table->string('CompanyCode', 32)->nullable();
+    $table->tinyInteger('Status')->default(1);
+    $table->tinyInteger('IsDeleted')->default(0);
+    $table->string('CreatedBy', 32)->nullable();
+    $table->dateTime('CreatedDate')->nullable();
+    $table->string('LastUpdateBy', 32)->nullable();
+    $table->dateTime('LastUpdateDate')->nullable();
 
     $table->timestamps();  
 });

@@ -17,9 +17,15 @@ return new class extends Migration
     $table->string('feature_label');
     $table->integer('limit_value')->nullable();
     $table->boolean('is_unlimited')->default(false);
-    $table->text('description')->nullable();
+    $table->text('description');
     $table->boolean('is_active')->default(true);
-    $table->timestamps();
+    $table->string('CompanyCode', 32)->nullable();
+    $table->tinyInteger('Status')->default(1);
+    $table->tinyInteger('IsDeleted')->default(0);
+    $table->string('CreatedBy', 32)->nullable();
+    $table->dateTime('CreatedDate')->nullable();
+    $table->string('LastUpdateBy', 32)->nullable();
+    $table->dateTime('LastUpdateDate')->nullable();
 }); 
     }
 

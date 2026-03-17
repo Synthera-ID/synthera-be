@@ -11,15 +11,32 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->rememberToken();
-            $table->timestamps();
-        });
+      Schema::create('users', function (Blueprint $table) {
+    $table->id();
+
+    // DATA UTAMA
+    $table->string('name', 100);
+    $table->string('email', 64)->unique();
+    $table->string('phone', 32)->nullable();
+    $table->string('api_key', 64)->nullable();
+    $table->string('password');
+    $table->string('avatar_url', 255)->nullable();
+
+    // STATUS
+    $table->boolean('is_active')->default(false);
+    $table->dateTime('email_verified_at')->nullable();
+
+    // WAJIB DARI DOSEN (AUDIT FIELD)
+    $table->string('company_code', 32)->nullable();
+    $table->tinyInteger('status')->default(1);
+    $table->tinyInteger('is_deleted')->default(0);
+    $table->string('created_by', 32)->nullable();
+    $table->dateTime('created_date')->nullable();
+    $table->string('last_updated_by', 32)->nullable();
+    $table->dateTime('last_updated_date')->nullable();
+
+    $table->rememberToken();
+});
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();

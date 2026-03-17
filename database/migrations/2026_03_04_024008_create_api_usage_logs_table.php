@@ -15,12 +15,18 @@ return new class extends Migration
     $table->id();
     $table->foreignId('user_id')->constrained()->onDelete('cascade');
     $table->foreignId('membership_id')->constrained()->onDelete('cascade');
-    $table->string('endpoint');
+    $table->string('endpoint',100);
     $table->enum('method',['GET','POST','PUT','DELETE']);
     $table->smallInteger('status_code');
     $table->string('ip_address',45)->nullable();
-    $table->timestamp('called_at');
-    $table->timestamps();
+    $table->datetime('called_at');
+    $table->string('CompanyCode', 32)->nullable();
+    $table->tinyInteger('Status')->default(1);
+    $table->tinyInteger('IsDeleted')->default(0);
+    $table->string('CreatedBy', 32)->nullable();
+    $table->dateTime('CreatedDate')->nullable();
+    $table->string('LastUpdateBy', 32)->nullable();
+    $table->dateTime('LastUpdateDate')->nullable();
 });
     }
   

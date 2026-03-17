@@ -21,15 +21,21 @@ return new class extends Migration
           ->constrained('subscription_plans')
           ->onDelete('cascade');
 
-    $table->enum('status', ['active', 'expired', 'cancelled']);
+    $table->enum('membership_status', ['active', 'expired', 'cancelled']);
 
     $table->date('start_date');
     $table->date('end_date');
 
     $table->boolean('auto_renew')->default(false);
-    $table->timestamp('cancelled_at')->nullable();
+    $table->dateTime('cancelled_at')->nullable();
 
-    $table->timestamps();
+    $table->string('CompanyCode', 32)->nullable();
+    $table->tinyInteger('Status')->default(1);
+    $table->tinyInteger('IsDeleted')->default(0);
+    $table->string('CreatedBy', 32)->nullable();
+    $table->dateTime('CreatedDate')->nullable();
+    $table->string('LastUpdateBy', 32)->nullable();
+    $table->dateTime('LastUpdateDate')->nullable();
 });
     }
 
