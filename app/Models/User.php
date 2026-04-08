@@ -21,6 +21,14 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'google_id',      // Tambahkan ini agar bisa simpan ID Google
+        'phone',          // Tambahkan ini sesuai migration tadi
+        'avatar_url',     // Tambahkan ini (opsional, jika ingin simpan foto profil)
+        'is_active',      // Tambahkan ini agar status bisa diubah
+        'company_code',   // Field dari dosen
+        'status',         // Field dari dosen
+        'created_by',     // Field dari dosen
+        'created_date',   // Field dari dosen
     ];
 
     /**
