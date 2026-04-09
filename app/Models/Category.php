@@ -9,13 +9,13 @@ class Category extends Model
     protected $table = 'course_categories';
 
     protected $fillable = [
-        'title',
+        'name',
         'slug',
         'description',
         'thumbnail_url'
-        ];
+    ];
     public function courses()
-{
-    return $this->hasMany(Course::class, 'category_id');
-}
+    {
+        return $this->hasMany(Course::class, 'category_id');
+    }
 }

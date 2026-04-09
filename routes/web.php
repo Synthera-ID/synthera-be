@@ -7,6 +7,9 @@ use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Str;
 
+Route::get("/", function () {
+    return "";
+});
 // 1. Cek koneksi database
 Route::get('/tes-koneksi', function () {
     try {
@@ -30,8 +33,8 @@ Route::get('/test-category', function () {
     try {
         $category = Category::create([
             'name' => 'Web Development',
+            'slug' => 'web-development',
             'description' => 'Belajar Laravel dari Nol',
-            'is_active' => true
         ]);
 
         return response()->json([
@@ -57,12 +60,12 @@ Route::get('/v1/api/oauth/google', function () {
 Route::get('/v1/api/oauth/google/callback', function () {
 
     try {
-        $googleUser = Socialite::driver('google')->stateless()->user();
+        $googleUser = Socialite::driver('google')->user();
 
         // 🔥 FIX: cek google_id ATAU email
         $user = User::where('google_id', $googleUser->id)
-                    ->orWhere('email', $googleUser->email)
-                    ->first();
+            ->orWhere('email', $googleUser->email)
+            ->first();
 
         if (!$user) {
             // user baru
@@ -86,7 +89,6 @@ Route::get('/v1/api/oauth/google/callback', function () {
             'message' => 'Login berhasil',
             'data' => $user
         ]);
-
     } catch (\Exception $e) {
         return response()->json([
             'status' => 'error',
