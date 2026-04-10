@@ -16,16 +16,17 @@ return new class extends Migration
 
             // DATA UTAMA
             $table->string('name', 100);
-            $table->string('email', 64)->unique();
+            $table->string('email')->unique();
             $table->string('phone', 32)->nullable();
             $table->string('api_key', 64)->nullable();
-            $table->string('password');
+            $table->string('password')->nullable();
             $table->string('avatar_url', 255)->nullable();
-
+            $table->string('google_id')->unique()->nullable();
             // STATUS
             $table->boolean('is_active')->default(false);
             $table->dateTime('email_verified_at')->nullable();
 
+            $table->timestamps();
             // WAJIB DARI DOSEN (AUDIT FIELD)
             $table->string('company_code', 32)->nullable();
             $table->tinyInteger('status')->default(1);

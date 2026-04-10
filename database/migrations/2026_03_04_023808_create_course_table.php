@@ -24,7 +24,7 @@ return new class extends Migration
 
             $table->boolean('is_published')->default(false);
 
-
+            $table->timestamps();
             $table->string('CompanyCode', 32)->nullable();
             $table->tinyInteger('Status')->default(1);
             $table->tinyInteger('IsDeleted')->default(0);

@@ -27,6 +27,8 @@ return new class extends Migration
     $table->dateTime('CreatedDate')->nullable();
     $table->string('LastUpdateBy', 32)->nullable();
     $table->dateTime('LastUpdateDate')->nullable();
+    $table->timestamps();
+
 });
     }
 

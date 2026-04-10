@@ -28,6 +28,7 @@ return new class extends Migration
 
     $table->boolean('auto_renew')->default(false);
     $table->dateTime('cancelled_at')->nullable();
+    $table->timestamps();
 
     $table->string('CompanyCode', 32)->nullable();
     $table->tinyInteger('Status')->default(1);

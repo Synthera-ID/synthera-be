@@ -19,6 +19,7 @@ return new class extends Migration
     $table->boolean('is_unlimited')->default(false);
     $table->text('description');
     $table->boolean('is_active')->default(true);
+    $table->timestamps();
     $table->string('CompanyCode', 32)->nullable();
     $table->tinyInteger('Status')->default(1);
     $table->tinyInteger('IsDeleted')->default(0);

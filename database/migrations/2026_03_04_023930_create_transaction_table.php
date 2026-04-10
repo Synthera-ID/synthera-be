@@ -32,6 +32,7 @@ return new class extends Migration
             $table->enum('transaction_status', ['pending', 'paid', 'failed', 'refunded']);
 
             $table->text('notes')->nullable();
+            $table->timestamps();
             $table->string('CompanyCode', 32)->nullable();
             $table->tinyInteger('Status')->default(1);  
             $table->tinyInteger('IsDeleted')->default(0);
@@ -41,7 +42,6 @@ return new class extends Migration
             $table->dateTime('LastUpdateDate')->nullable();
 
 
-            $table->timestamps();  
         });
     }
 

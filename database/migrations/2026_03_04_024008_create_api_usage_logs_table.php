@@ -20,6 +20,7 @@ return new class extends Migration
     $table->smallInteger('status_code');
     $table->string('ip_address',45)->nullable();
     $table->datetime('called_at');
+    $table->timestamps();
     $table->string('CompanyCode', 32)->nullable();
     $table->tinyInteger('Status')->default(1);
     $table->tinyInteger('IsDeleted')->default(0);

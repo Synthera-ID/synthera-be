@@ -29,6 +29,7 @@ return new class extends Migration
     $table->enum('payment_status', ['pending', 'success', 'failed']);
 
     $table->dateTime('paid_at');
+    $table->timestamps();
     $table->string('CompanyCode', 32)->nullable();
     $table->tinyInteger('Status')->default(1);
     $table->tinyInteger('IsDeleted')->default(0);
@@ -37,7 +38,6 @@ return new class extends Migration
     $table->string('LastUpdateBy', 32)->nullable();
     $table->dateTime('LastUpdateDate')->nullable();
 
-    $table->timestamps();  
 });
 
     }
