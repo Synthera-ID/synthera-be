@@ -6,6 +6,10 @@ use App\Http\Controllers\Api\MembershipController;
 use App\Http\Controllers\Api\SubscriptionPlanController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\TransactionController;
+use App\Http\Controllers\Api\AuthController;
+
+Route::post('/auth/google', [AuthController::class, 'google']);
+Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/transactions', [TransactionController::class, 'index']);
 Route::get('/transactions/{id}', [TransactionController::class, 'show']);
