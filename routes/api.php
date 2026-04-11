@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\SubscriptionPlanController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\AuthController;
+use Illuminate\Http\Request;
 
 Route::post('/auth/google', [AuthController::class, 'google']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -25,3 +26,7 @@ Route::get('/courses/{id}', [CourseController::class, 'show']);
 
 Route::get('/memberships', [MembershipController::class, 'index']);
 Route::get('/memberships/{id}', [MembershipController::class, 'show']);
+
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return response()->json($request->user());
+});
