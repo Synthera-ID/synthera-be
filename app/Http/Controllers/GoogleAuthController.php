@@ -6,6 +6,7 @@ use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class GoogleAuthController extends Controller
@@ -41,13 +42,12 @@ class GoogleAuthController extends Controller
                     'password' => bcrypt(Str::random(8)),
                 ]);
             }
+            Auth::login($user);
 
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            return redirect("https://synthera.id/login?status=success&token={$token}", 200);
+            return redirect()->away("https://synthera.id/login?status=success");
         } catch (\Exception $e) {
             Log::info($e);
-            return redirect("https://synthera.id/login?status=failed", 500);
+            return redirect()->away("https://synthera.id/login?status=failed");
         }
     }
 }
