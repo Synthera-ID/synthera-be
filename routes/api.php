@@ -28,5 +28,13 @@ Route::get('/memberships', [MembershipController::class, 'index']);
 Route::get('/memberships/{id}', [MembershipController::class, 'show']);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return response()->json($request->user());
+    $user = $request->user();
+
+    if (!$user) {
+        return response()->json([
+            'message' => 'Unauthenticated.' 
+        ], 401);
+    }
+
+    return response()->json($user);
 });
