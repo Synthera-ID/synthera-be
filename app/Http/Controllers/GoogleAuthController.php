@@ -6,6 +6,7 @@ use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Exception;
+use Illuminate\Support\Str;
 
 class GoogleAuthController extends Controller
 {
@@ -19,33 +20,34 @@ class GoogleAuthController extends Controller
     public function handleGoogleCallback()
     {
         try {
-            // Ambil data user dari Google
             $googleUser = Socialite::driver('google')->user();
 
-            // Cari atau buat user
-            $user = User::updateOrCreate(
-                [
-                    'email' => $googleUser->email
-                ],
-                [
-                    'name' => $googleUser->name,
-                    'google_id' => $googleUser->id,
-                    'password' => bcrypt('google-login') // dummy password
-                ]
-            );
+            $user = User::where('google_id', $googleUser->id)->first();
 
-            // Buat token Sanctum
+            if (!$user) {
+                $user = User::where('email', $googleUser->email)->first();
+                if ($user) {
+                    $user->update([
+                        'google_id' => $googleUser->id
+                    ]);
+                }
+            }
+
+            if (!$user) {
+                $user = User::create([
+                    'name' => $googleUser->name,
+                    'email' => $googleUser->email,
+                    'google_id' => $googleUser->id,
+                    'password' => bcrypt(Str::random(8)),
+                ]);
+            }
+
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            // Redirect ke FRONTEND + bawa token
-            return redirect("https://synthera.id/login?token=" . $token);
-
-        } catch (Exception $e) {
-            // Log error
-            Log::error($e->getMessage());
-
-            // Redirect kalau gagal
-            return redirect("https://synthera.id/login?error=login_failed");
+            return redirect("https://synthera.id/login?status=success&token={$token}", 200);
+        } catch (\Exception $e) {
+            Log::info($e);
+            return redirect("https://synthera.id/login?status=failed", 500);
         }
     }
 }

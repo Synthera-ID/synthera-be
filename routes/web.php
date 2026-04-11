@@ -52,5 +52,5 @@ Route::get('/test-category', function () {
 
 
 // 🔐 Google OAuth Routes (FINAL)
-Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle']);
-Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
+Route::get('/v1/api/oauth/google', [GoogleAuthController::class, 'redirectToGoogle']);
+Route::get('/v1/api/oauth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
