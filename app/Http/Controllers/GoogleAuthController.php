@@ -6,7 +6,6 @@ use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Exception;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
@@ -43,7 +42,6 @@ class GoogleAuthController extends Controller
                     'password' => bcrypt(Str::random(8)),
                 ]);
             }
-            Auth::login($user);
 
             $token = Str::random(40);
             Cache::put("oauth_$token", $user->id, now()->addMinutes(1));

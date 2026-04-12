@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 
 Route::post('/auth/google', [AuthController::class, 'google']);
 Route::post('/auth/verify', [AuthController::class, 'verify']);
+
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/transactions', [TransactionController::class, 'index']);
@@ -33,7 +34,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
     if (!$user) {
         return response()->json([
-            'message' => 'Unauthenticated.' 
+            'message' => 'Unauthorization.' 
         ], 401);
     }
 

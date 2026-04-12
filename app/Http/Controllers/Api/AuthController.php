@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 
@@ -38,21 +39,33 @@ class AuthController extends Controller
     {
         $token = $request->token;
 
-        if (!$token || !Cache::has("oauth_$token")) {
+        if (!$token) {
             return response()->json([
                 'message' => 'Invalid Token Authentication.'
             ], 401);
         }
 
-        // 🔥 ambil user id
-        $userId = Cache::get("oauth_$token");
+        $userId = Cache::pull("oauth_$token");
 
-        Cache::forget("oauth_$token");
+        if (!$userId) {
+            return response()->json([
+                'message' => 'Invalid or Expired Token.'
+            ], 401);
+        }
+
+        $user = User::find($userId);
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'User Not Found.'
+            ], 404);
+        }
+
+        Auth::login($user);
 
         return response()->json([
             'success' => true,
             'message' => "Authentication Successfully.",
-            'user_id' => $userId
         ]);
     }
 }
