@@ -29,7 +29,7 @@ Route::get('/courses/{id}', [CourseController::class, 'show']);
 Route::get('/memberships', [MembershipController::class, 'index']);
 Route::get('/memberships/{id}', [MembershipController::class, 'show']);
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::middleware('auth')->get('/user', function (Request $request) {
     $user = $request->user();
 
     if (!$user) {
