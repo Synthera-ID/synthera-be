@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Exception;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class GoogleAuthController extends Controller
@@ -44,7 +45,9 @@ class GoogleAuthController extends Controller
             }
             Auth::login($user);
 
-            return redirect()->away("https://synthera.id/login?status=success");
+            $token = Str::random(40);
+            Cache::put("oauth_$token", $user->id, now()->addMinutes(1));
+            return redirect()->away("https://synthera.id/login?status=success&token=$token");
         } catch (\Exception $e) {
             Log::info($e);
             return redirect()->away("https://synthera.id/login?status=failed");

@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\AuthController;
 use Illuminate\Http\Request;
 
 Route::post('/auth/google', [AuthController::class, 'google']);
+Route::post('/auth/verify', [AuthController::class, 'verify']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/transactions', [TransactionController::class, 'index']);
