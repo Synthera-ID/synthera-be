@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\TwoFactorController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 Route::post('/auth/google', [AuthController::class, 'google']);
 Route::post('/auth/verify', [AuthController::class, 'verify']);
@@ -46,7 +47,10 @@ Route::middleware('auth')->get('/user', function (Request $request) {
         ], 401);
     }
 
-    return response()->json(array_merge($user->toArray(), [
+    $response = array_merge($user->toArray(), [
         'two_factor_verified' => session('two_factor_verified', false),
-    ]));
+    ]);
+
+    Log::info("User data retrieved.", ['user' => $response]);
+    return response()->json($response);
 });
