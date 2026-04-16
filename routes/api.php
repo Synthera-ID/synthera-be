@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\SubscriptionPlanController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\TwoFactorController;
 use Illuminate\Http\Request;
 
 Route::post('/auth/google', [AuthController::class, 'google']);
@@ -29,14 +30,23 @@ Route::get('/courses/{id}', [CourseController::class, 'show']);
 Route::get('/memberships', [MembershipController::class, 'index']);
 Route::get('/memberships/{id}', [MembershipController::class, 'show']);
 
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/2fa/enable', [TwoFactorController::class, 'enable']);
+    Route::post('/2fa/verify', [TwoFactorController::class, 'verify']);
+    Route::post('/2fa/disable', [TwoFactorController::class, 'disable']);
+});
+
+
 Route::middleware('auth')->get('/user', function (Request $request) {
     $user = $request->user();
 
     if (!$user) {
         return response()->json([
-            'message' => 'Unauthorization.' 
+            'message' => 'Unauthorization.'
         ], 401);
     }
 
-    return response()->json($user);
+    return response()->json(array_merge($user->toArray(), [
+        'two_factor_verified' => session('two_factor_verified', false),
+    ]));
 });
