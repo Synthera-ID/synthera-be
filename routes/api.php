@@ -54,3 +54,30 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     Log::info("User data retrieved.", ['user' => $response]);
     return response()->json($response);
 });
+
+// TEMPORARY DEBUG — hapus setelah selesai
+Route::get('/debug-auth', function (Request $request) {
+    $cookies = $request->cookies->all();
+    $sessionId = $request->cookie('api-synthera-session');
+    $referer = $request->headers->get('referer');
+    $origin = $request->headers->get('origin');
+
+    // Cek apakah Sanctum anggap request ini stateful
+    $statefulDomains = config('sanctum.stateful');
+
+    $info = [
+        'has_session_cookie' => !empty($sessionId),
+        'cookie_names' => array_keys($cookies),
+        'referer' => $referer,
+        'origin' => $origin,
+        'sanctum_stateful_domains' => $statefulDomains,
+        'session_driver' => config('session.driver'),
+        'session_domain' => config('session.domain'),
+        'is_authenticated' => auth('sanctum')->check(),
+        'user' => auth('sanctum')->user()?->email,
+    ];
+
+    Log::info('DEBUG AUTH', $info);
+
+    return response()->json($info);
+});
