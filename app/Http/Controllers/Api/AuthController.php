@@ -62,7 +62,7 @@ class AuthController extends Controller
         }
 
         Auth::login($user);
-
+        $request->session()->regenerate();
         return response()->json([
             'success' => true,
             'message' => "Authentication Successfully.",
