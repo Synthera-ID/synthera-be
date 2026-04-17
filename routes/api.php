@@ -9,7 +9,6 @@ use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\TwoFactorController;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 Route::post('/auth/google', [AuthController::class, 'google']);
 Route::post('/auth/verify', [AuthController::class, 'verify']);
