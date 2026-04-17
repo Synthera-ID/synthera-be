@@ -30,6 +30,7 @@ class User extends Authenticatable
         'status',         // Field dari dosen
         'created_by',     // Field dari dosen
         'created_date',   // Field dari dosen
+        
     ];
 
     /**

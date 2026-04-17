@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use App\Http\Resources\UserResource;
 
 class GoogleAuthController extends Controller
 {
@@ -22,6 +23,7 @@ class GoogleAuthController extends Controller
     {
         try {
             $googleUser = Socialite::driver('google')->user();
+            $avatarUrl = $googleUser->getAvatar();
 
             $user = User::where('google_id', $googleUser->id)->first();
 
@@ -39,6 +41,7 @@ class GoogleAuthController extends Controller
                     'name' => $googleUser->name,
                     'email' => $googleUser->email,
                     'google_id' => $googleUser->id,
+                    'avatar' => $avatarUrl, // Sekarang variabel ini sudah aman digunakan
                     'password' => bcrypt(Str::random(8)),
                 ]);
             }

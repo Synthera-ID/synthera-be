@@ -39,4 +39,7 @@ Route::middleware('auth')->get('/user', function (Request $request) {
     }
 
     return response()->json($user);
+
+    // Gunakan UserResource agar FE mendapatkan field 'profile_picture'
+    return new UserResource($user);
 });
