@@ -33,6 +33,7 @@ class User extends Authenticatable
         'two_factor_enabled',
         'two_factor_secret',
         'two_factor_confirmed_at',
+        'two_factor_verified'
     ];
 
     /**

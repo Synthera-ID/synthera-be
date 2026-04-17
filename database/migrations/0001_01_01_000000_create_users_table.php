@@ -25,11 +25,12 @@ return new class extends Migration
             // STATUS
             $table->boolean('is_active')->default(false);
             $table->dateTime('email_verified_at')->nullable();
-            
+
             // 2FA FIELDS
             $table->boolean('two_factor_enabled')->default(false)->after('password');
-            $table->string('two_factor_secret')->nullable()->after('two_factor_enabled');
+            $table->text('two_factor_secret')->nullable()->after('two_factor_enabled');
             $table->timestamp('two_factor_confirmed_at')->nullable()->after('two_factor_secret');
+            $table->boolean('two_factor_verified')->default(false);
 
             $table->timestamps();
             // WAJIB DARI DOSEN (AUDIT FIELD)

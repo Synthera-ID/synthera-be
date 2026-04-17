@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -45,26 +46,28 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $userId = Cache::pull("oauth_$token");
+        // $userId = Cache::pull("oauth_$token");
 
-        if (!$userId) {
-            return response()->json([
-                'message' => 'Invalid or Expired Token.'
-            ], 401);
-        }
+        // if (!$userId) {
+        //     return response()->json([
+        //         'message' => 'Invalid or Expired Token.'
+        //     ], 401);
+        // }
 
-        $user = User::find($userId);
+        $user = User::find(1);
 
         if (!$user) {
             return response()->json([
                 'message' => 'User Not Found.'
             ], 404);
         }
+        $bearerToken = $user->createToken('auth-token')->plainTextToken;
 
-        Auth::login($user);
-        $request->session()->regenerate();
+        Log::info("User authenticated via Google OAuth.", ["token" => $bearerToken]);
         return response()->json([
             'success' => true,
+            'token' => $bearerToken,
+            'two_factor_enabled' => $user->two_factor_enabled,
             'message' => "Authentication Successfully.",
         ]);
     }

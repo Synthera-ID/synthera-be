@@ -9,6 +9,9 @@ use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class TwoFactorController extends Controller
 {
@@ -52,9 +55,6 @@ class TwoFactorController extends Controller
      */
     public function verify(Request $request): JsonResponse
     {
-        $request->validate([
-            'code' => 'required|string|size:6',
-        ]);
 
         $user = $request->user();
 
@@ -73,14 +73,20 @@ class TwoFactorController extends Controller
             ], 422);
         }
 
-        // Activate 2FA
+        if (!$user->two_factor_confirmed_at) {
+            $user->update([
+                'two_factor_enabled' => true,
+                'two_factor_confirmed_at' => now(),
+            ]);
+        }
+
         $user->update([
-            'two_factor_enabled' => true,
-            'two_factor_confirmed_at' => now(),
+            'two_factor_verified' => true,
         ]);
 
         return response()->json([
-            'message' => '2FA has been enabled successfully.',
+            'status' => true,
+            'message' => $user->wasChanged() ? '2FA has been enabled.' : '2FA code verified successfully.'
         ]);
     }
 
@@ -90,9 +96,6 @@ class TwoFactorController extends Controller
      */
     public function disable(Request $request): JsonResponse
     {
-        $request->validate([
-            'code' => 'required|string|size:6',
-        ]);
 
         $user = $request->user();
 

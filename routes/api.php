@@ -32,8 +32,8 @@ Route::get('/memberships', [MembershipController::class, 'index']);
 Route::get('/memberships/{id}', [MembershipController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/2fa/enable', [TwoFactorController::class, 'enable']);
     Route::post('/2fa/verify', [TwoFactorController::class, 'verify']);
+    Route::post('/2fa/enable', [TwoFactorController::class, 'enable']);
     Route::post('/2fa/disable', [TwoFactorController::class, 'disable']);
 });
 
@@ -41,16 +41,5 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     $user = $request->user();
 
-    if (!$user) {
-        return response()->json([
-            'message' => 'Unauthorization.'
-        ], 401);
-    }
-
-    $response = array_merge($user->toArray(), [
-        'two_factor_verified' => session('two_factor_verified', false),
-    ]);
-
-    Log::info("User data retrieved.", ['user' => $response]);
-    return response()->json($response);
+    return response()->json($user);
 });
