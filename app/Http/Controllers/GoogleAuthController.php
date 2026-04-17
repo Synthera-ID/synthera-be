@@ -47,7 +47,7 @@ class GoogleAuthController extends Controller
             }
 
             $token = Str::random(40);
-            Cache::put("oauth_$token", $user->id, now()->addMinutes(1));
+            Cache::put("oauth_$token", $user->id, now()->addMinutes(3));
             return redirect()->away("https://synthera.id/login?status=success&token=$token");
         } catch (\Exception $e) {
             Log::info($e);

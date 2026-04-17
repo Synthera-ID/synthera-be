@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -45,7 +45,7 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $userId = Cache::pull("oauth_$token");
+        $userId = Cache::get("oauth_$token");
 
         if (!$userId) {
             return response()->json([
@@ -60,11 +60,13 @@ class AuthController extends Controller
                 'message' => 'User Not Found.'
             ], 404);
         }
-
-        Auth::login($user);
-
+        $bearerToken = $user->createToken('auth-token')->plainTextToken;
+        Cache::forget("oauth_$token");
+        Log::info("User authenticated via Google OAuth.", ["token" => $bearerToken]);
         return response()->json([
             'success' => true,
+            'token' => $bearerToken,
+            'two_factor_enabled' => $user->two_factor_enabled,
             'message' => "Authentication Successfully.",
         ]);
     }
