@@ -46,15 +46,15 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // $userId = Cache::pull("oauth_$token");
+        $userId = Cache::pull("oauth_$token");
 
-        // if (!$userId) {
-        //     return response()->json([
-        //         'message' => 'Invalid or Expired Token.'
-        //     ], 401);
-        // }
+        if (!$userId) {
+            return response()->json([
+                'message' => 'Invalid or Expired Token.'
+            ], 401);
+        }
 
-        $user = User::find(1);
+        $user = User::find($userId);
 
         if (!$user) {
             return response()->json([
