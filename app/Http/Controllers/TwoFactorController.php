@@ -72,8 +72,8 @@ class TwoFactorController extends Controller
                 'message' => 'Invalid verification code. Please try again.',
             ], 422);
         }
-
-        if (!$user->two_factor_confirmed_at) {
+        $isFirstTime = !$user->two_factor_confirmed_at;
+        if ($isFirstTime) {
             $user->update([
                 'two_factor_enabled' => true,
                 'two_factor_confirmed_at' => now(),
@@ -86,7 +86,7 @@ class TwoFactorController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => $user->wasChanged() ? '2FA has been enabled.' : '2FA code verified successfully.'
+            'message' => $isFirstTime ? '2FA has been enabled.' : '2FA code verified successfully.'
         ]);
     }
 

@@ -23,7 +23,7 @@ class UserResource extends JsonResource
             // Ini bagian pentingnya:
             // Jika kolom 'avatar' di database ada isinya, pakai itu.
             // Jika kosong (null), pakai UI-Avatars sebagai cadangan (fallback).
-            'profile_picture'  => $this->avatar ?? 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=7F9CF5&background=EBF4FF',
+            'avatar_url'  => $this->avatar ?? 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=7F9CF5&background=EBF4FF',
             
             'created_at'       => $this->created_at->format('Y-m-d H:i:s'),
         ];

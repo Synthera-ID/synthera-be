@@ -41,7 +41,7 @@ class GoogleAuthController extends Controller
                     'name' => $googleUser->name,
                     'email' => $googleUser->email,
                     'google_id' => $googleUser->id,
-                    'avatar' => $avatarUrl, // Sekarang variabel ini sudah aman digunakan
+                    'avatar_url' => $avatarUrl,
                     'password' => bcrypt(Str::random(8)),
                 ]);
             }

@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\TwoFactorController;
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 
 Route::post('/auth/google', [AuthController::class, 'google']);
@@ -40,8 +41,11 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     $user = $request->user();
 
-    return response()->json($user);
-
-    // Gunakan UserResource agar FE mendapatkan field 'profile_picture'
+    if (!$user) {
+        return response()->json([
+            'message' => 'Unauthorized.'
+        ], 401);
+    }
+    // return response()->json($user);
     return new UserResource($user);
 });

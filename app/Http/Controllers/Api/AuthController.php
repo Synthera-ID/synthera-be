@@ -66,7 +66,8 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'token' => $bearerToken,
-            'two_factor_enabled' => $user->two_factor_enabled,
+            'two_factor_enabled' => $user->two_factor_confirmed_at ? true : false,
+            'two_factor_verified' => $user->two_factor_verified,
             'message' => "Authentication Successfully.",
         ]);
     }
