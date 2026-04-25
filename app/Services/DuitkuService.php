@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use RuntimeException;
 
 class DuitkuService
 {
@@ -14,6 +15,21 @@ class DuitkuService
     public function apiKey()
     {
         return config('services.duitku.api_key');
+    }
+
+    private function baseUrl(): string
+    {
+        $environment = strtolower((string) config('services.duitku.env', 'sandbox'));
+        $isProduction = $environment === 'production' || (bool) config('services.duitku.is_production', false);
+
+        return $isProduction
+            ? 'https://passport.duitku.com'
+            : 'https://sandbox.duitku.com';
+    }
+
+    private function timeout(): int
+    {
+        return max(1, (int) config('services.duitku.timeout', 30));
     }
 
     // Menghitung signature untuk request ke Duitku
@@ -32,15 +48,21 @@ class DuitkuService
     // Fungsi untuk menembak API Duitku (Inquiry)
     public function createInquiry(array $payload)
     {
-        $url = config('services.duitku.env') === 'sandbox' 
-            ? 'https://sandbox.duitku.com/webapi/api/merchant/v2/inquiry'
-            : 'https://passport.duitku.com/webapi/api/merchant/v2/inquiry';
+        $url = $this->baseUrl() . '/webapi/api/merchant/v2/inquiry';
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
-        ])->post($url, $payload);
+        ])
+            ->timeout($this->timeout())
+            ->post($url, $payload);
 
-        return $response->json();
+        if (! $response->successful()) {
+            throw new RuntimeException(
+                sprintf('Duitku inquiry gagal. HTTP %d: %s', $response->status(), $response->body())
+            );
+        }
+
+        return $response->json() ?? [];
     }
 
     // Fungsi untuk cek status transaksi secara manual
@@ -54,9 +76,15 @@ class DuitkuService
             'signature' => $signature
         ];
 
-        $url = 'https://sandbox.duitku.com/webapi/api/merchant/transactionStatus';
-        $response = Http::post($url, $payload);
+        $url = $this->baseUrl() . '/webapi/api/merchant/transactionStatus';
+        $response = Http::timeout($this->timeout())->post($url, $payload);
 
-        return $response->json();
+        if (! $response->successful()) {
+            throw new RuntimeException(
+                sprintf('Duitku status check gagal. HTTP %d: %s', $response->status(), $response->body())
+            );
+        }
+
+        return $response->json() ?? [];
     }
 }
