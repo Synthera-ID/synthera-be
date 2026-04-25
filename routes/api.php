@@ -35,7 +35,7 @@ Route::get('/categories/{id}', [CategoryController::class, 'show']);
 Route::get('/memberships', [MembershipController::class, 'index']);
 Route::get('/memberships/{id}', [MembershipController::class, 'show']);
 
-Route::post('/payment', [PaymentController::class, 'create']);
+Route::post('/payment', [PaymentController::class, 'postPayment']);
 Route::get('/payment', [PaymentController::class, 'index']);
 Route::get('/payment/{id}', [PaymentController::class, 'show']);
 Route::post('/payment/callback', [PaymentController::class, 'callback']);
