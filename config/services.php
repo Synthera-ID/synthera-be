@@ -37,10 +37,18 @@ return [
     ],
 
     'duitku' => [
-    'merchant_code' => env('DUITKU_MERCHANT_CODE'),
-    'api_key' => env('DUITKU_API_KEY'),
-    'callback_url' => env('DUITKU_CALLBACK_URL'),
-    'env' => env('DUITKU_ENV', 'sandbox'),
-],
+        'merchant_code' => env('DUITKU_MERCHANT_CODE'),
+        'api_key' => env('DUITKU_API_KEY'),
+        'callback_url' => env('DUITKU_CALLBACK_URL'),
+        'return_url' => env('DUITKU_RETURN_URL', env('APP_URL')),
+        'qris_payment_method' => env('DUITKU_QRIS_PAYMENT_METHOD', 'SP'),
+        'expiry_period' => (int) env('DUITKU_EXPIRY_PERIOD', 10),
+        'timeout' => (int) env('DUITKU_TIMEOUT', 30),
+        'is_production' => (bool) env('DUITKU_IS_PRODUCTION', false),
+        'env' => env(
+            'DUITKU_ENV',
+            env('DUITKU_IS_PRODUCTION', false) ? 'production' : 'sandbox'
+        ),
+    ],
 
 ];
