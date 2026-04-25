@@ -35,6 +35,11 @@ Route::get('/categories/{id}', [CategoryController::class, 'show']);
 Route::get('/memberships', [MembershipController::class, 'index']);
 Route::get('/memberships/{id}', [MembershipController::class, 'show']);
 
+Route::post('/payment', [PaymentController::class, 'create']);
+Route::get('/payment', [PaymentController::class, 'index']);
+Route::get('/payment/{id}', [PaymentController::class, 'show']);
+Route::post('/payment/callback', [PaymentController::class, 'callback']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/2fa/verify', [TwoFactorController::class, 'verify']);
     Route::post('/2fa/enable', [TwoFactorController::class, 'enable']);
