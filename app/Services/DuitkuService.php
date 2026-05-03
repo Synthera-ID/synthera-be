@@ -3,10 +3,35 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Writer;
+
 use RuntimeException;
 
 class DuitkuService
 {
+    public function generateQr($data, $invoice): string
+    {
+
+        $renderer = new ImageRenderer(
+            new RendererStyle(300),
+            new SvgImageBackEnd()
+        );
+
+        $writer = new Writer($renderer);
+        if (!file_exists(storage_path('app/public/qrcodes'))) {
+            mkdir(storage_path('app/public/qrcodes'), 0755, true);
+        }
+        $fileName = 'qr_' . $invoice . '.svg';
+        $path = storage_path('app/public/qrcodes/' . $fileName);
+
+        $writer->writeFile($data, $path);
+
+        return asset('storage/qrcodes/' . $fileName);
+    }
+
     public function merchantCode()
     {
         return config('services.duitku.merchant_code');
@@ -19,8 +44,7 @@ class DuitkuService
 
     private function baseUrl(): string
     {
-        $environment = strtolower((string) config('services.duitku.env', 'sandbox'));
-        $isProduction = $environment === 'production' || (bool) config('services.duitku.is_production', false);
+        $isProduction = (bool) config('services.duitku.is_production', false);
 
         return $isProduction
             ? 'https://passport.duitku.com'
@@ -56,7 +80,7 @@ class DuitkuService
             ->timeout($this->timeout())
             ->post($url, $payload);
 
-        if (! $response->successful()) {
+        if (!$response->successful()) {
             throw new RuntimeException(
                 sprintf('Duitku inquiry gagal. HTTP %d: %s', $response->status(), $response->body())
             );
@@ -69,7 +93,7 @@ class DuitkuService
     public function checkTransactionStatus($merchantOrderId)
     {
         $signature = md5($this->merchantCode() . $merchantOrderId . $this->apiKey());
-        
+
         $payload = [
             'merchantCode' => $this->merchantCode(),
             'merchantOrderId' => $merchantOrderId,

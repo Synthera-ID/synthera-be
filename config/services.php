@@ -45,10 +45,6 @@ return [
         'expiry_period' => (int) env('DUITKU_EXPIRY_PERIOD', 10),
         'timeout' => (int) env('DUITKU_TIMEOUT', 30),
         'is_production' => (bool) env('DUITKU_IS_PRODUCTION', false),
-        'env' => env(
-            'DUITKU_ENV',
-            env('DUITKU_IS_PRODUCTION', false) ? 'production' : 'sandbox'
-        ),
     ],
 
 ];

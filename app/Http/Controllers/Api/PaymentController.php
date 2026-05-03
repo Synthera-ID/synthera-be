@@ -16,10 +16,12 @@ use RuntimeException;
 
 class PaymentController extends Controller
 {
-    private const QRIS_METHODS = ['SP', 'NQ', 'GQ', 'SQ'];
+    private const QRIS_METHODS = ['SP'];
 
-    public function index()
+    public function index(Request $request)
     {
+        $user = $request->user();
+
         return Payment::all();
     }
 
@@ -30,52 +32,27 @@ class PaymentController extends Controller
 
     public function postPayment(Request $request, DuitkuService $duitku)
     {
+        $user = $request->user();
         $validated = $request->validate([
             'plan_id' => ['required', 'integer', 'exists:subscription_plans,id'],
-            'user_id' => ['nullable', 'integer', 'exists:users,id'],
             'payment_method' => ['nullable', 'string'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'phone_number' => ['nullable', 'string', 'max:50'],
-            'customer_va_name' => ['nullable', 'string', 'max:100'],
-            'merchant_user_info' => ['nullable', 'string', 'max:255'],
-            'additional_param' => ['nullable', 'string', 'max:255'],
-            'callback_url' => ['nullable', 'url', 'max:255'],
-            'return_url' => ['nullable', 'url', 'max:255'],
-            'expiry_period' => ['nullable', 'integer', 'min:1', 'max:1440'],
         ]);
-
-        $user = $this->resolveUser($request, $validated['user_id'] ?? null);
-        if (! $user) {
-            return response()->json([
-                'message' => 'User tidak ditemukan. Gunakan token auth atau kirim user_id.',
-            ], 422);
-        }
 
         $plan = SubscriptionPlan::findOrFail($validated['plan_id']);
         $paymentAmount = (int) round((float) $plan->price);
 
-        if ($paymentAmount < 10000) {
-            return response()->json([
-                'message' => 'Nominal minimum Duitku adalah Rp10.000.',
-            ], 422);
-        }
-
         $paymentMethod = strtoupper((string) ($validated['payment_method'] ?? config('services.duitku.qris_payment_method', 'SP')));
-        if (! in_array($paymentMethod, self::QRIS_METHODS, true)) {
+        if (!in_array($paymentMethod, self::QRIS_METHODS, true)) {
             return response()->json([
-                'message' => 'payment_method QRIS tidak valid. Gunakan SP, NQ, GQ, atau SQ.',
-            ], 422);
+                'message' => 'payment_method QRIS tidak valid.',
+            ], 400);
         }
 
         $merchantOrderId = $this->generateMerchantOrderId();
-        $callbackUrl = (string) ($validated['callback_url'] ?? config('services.duitku.callback_url', ''));
-        if ($callbackUrl === '') {
-            $callbackUrl = rtrim((string) config('app.url'), '/') . '/api/payment/callback';
-        }
+        $callbackUrl = rtrim((string) config('app.url'), '/') . '/api/payment/callback';
 
-        $returnUrl = (string) ($validated['return_url'] ?? config('services.duitku.return_url', config('app.url')));
-        $expiryPeriod = (int) ($validated['expiry_period'] ?? config('services.duitku.expiry_period', 10));
-
+        $returnUrl = (string) config('services.duitku.return_url', config('app.url'));
+        $expiryPeriod = (int) config('services.duitku.expiry_period', 10);
         try {
             return DB::transaction(function () use (
                 $validated,
@@ -106,12 +83,9 @@ class PaymentController extends Controller
                     'paymentAmount' => $paymentAmount,
                     'paymentMethod' => $paymentMethod,
                     'merchantOrderId' => $merchantOrderId,
-                    'productDetails' => 'Pembayaran paket ' . $plan->name,
-                    'additionalParam' => (string) ($validated['additional_param'] ?? ''),
-                    'merchantUserInfo' => (string) ($validated['merchant_user_info'] ?? ''),
-                    'customerVaName' => (string) ($validated['customer_va_name'] ?? $user->name ?? 'Synthera User'),
-                    'email' => (string) ($validated['email'] ?? $user->email),
-                    'phoneNumber' => (string) ($validated['phone_number'] ?? $user->phone ?? ''),
+                    'productDetails' => 'Pembayaran paket ' . $plan->name . " - " . $plan->description,
+                    'customerVaName' => (string) ('Synthera User'),
+                    'email' => (string) $user->email,
                     'itemDetails' => [
                         [
                             'name' => $plan->name,
@@ -126,6 +100,7 @@ class PaymentController extends Controller
                 ];
 
                 $duitkuResponse = $duitku->createInquiry($duitkuPayload);
+
                 $statusCode = (string) ($duitkuResponse['statusCode'] ?? '');
 
                 if ($statusCode !== '00') {
@@ -139,34 +114,16 @@ class PaymentController extends Controller
                         'duitku' => $duitkuResponse,
                     ], 422);
                 }
-
-                Payment::updateOrCreate(
-                    ['transaction_id' => $transaction->id],
-                    [
-                        'user_id' => $user->id,
-                        'payment_method' => 'e_wallet',
-                        'payment_gateway' => 'duitku',
-                        'gateway_ref' => $duitkuResponse['reference'] ?? null,
-                        'amount' => $paymentAmount,
-                        'payment_status' => 'pending',
-                        'paid_at' => now(),
-                    ]
-                );
+                $qrisUrl = $duitku->generateQr($duitkuResponse["qrString"], $merchantOrderId);
 
                 return response()->json([
                     'message' => 'Payment berhasil dibuat.',
                     'data' => [
-                        'merchant_order_id' => $merchantOrderId,
-                        'transaction_id' => $transaction->id,
+                        'invoice_code' => $merchantOrderId,
                         'payment_method' => $paymentMethod,
-                        'payment_url' => $duitkuResponse['paymentUrl'] ?? null,
-                        'app_url' => $duitkuResponse['appUrl'] ?? null,
-                        'va_number' => $duitkuResponse['vaNumber'] ?? null,
-                        'qr_string' => $duitkuResponse['qrString'] ?? null,
-                        'reference' => $duitkuResponse['reference'] ?? null,
+                        'payment_url' => $qrisUrl,
                         'amount' => (int) ($duitkuResponse['amount'] ?? $paymentAmount),
-                        'status_code' => $statusCode,
-                        'status_message' => $duitkuResponse['statusMessage'] ?? null,
+                        'plan' => $plan
                     ],
                 ], 201);
             });
@@ -316,7 +273,7 @@ class PaymentController extends Controller
 
         try {
             $statusCheck = $duitku->checkTransactionStatus($merchantOrderId);
-            if (! empty($statusCheck['statusCode'])) {
+            if (!empty($statusCheck['statusCode'])) {
                 $statusCode = (string) $statusCheck['statusCode'];
             }
         } catch (\Throwable $e) {
