@@ -15,21 +15,25 @@ class DuitkuService
     public function generateQr($data, $invoice): string
     {
 
+        $directory = public_path('qrcodes');
+
+        if (!file_exists($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
         $renderer = new ImageRenderer(
             new RendererStyle(300),
             new SvgImageBackEnd()
         );
 
         $writer = new Writer($renderer);
-        if (!file_exists(storage_path('app/public/qrcodes'))) {
-            mkdir(storage_path('app/public/qrcodes'), 0755, true);
-        }
+
         $fileName = 'qr_' . $invoice . '.svg';
-        $path = storage_path('app/public/qrcodes/' . $fileName);
+        $path = $directory . '/' . $fileName;
 
         $writer->writeFile($data, $path);
 
-        return asset('storage/qrcodes/' . $fileName);
+        return asset('qrcodes/' . $fileName);
     }
 
     public function merchantCode()
