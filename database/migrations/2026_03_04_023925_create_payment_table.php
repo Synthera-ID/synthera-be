@@ -6,31 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('memberships', function (Blueprint $table) {
+        Schema::create('payments', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('user_id')
-                ->constrained()
-                ->onDelete('cascade');
+            $table->enum('payment_method', ['credit_card', 'bank_transfer', 'e_wallet', 'qris']);
+            $table->string("payment_code");
+            $table->string('payment_gateway', 100)->default("DuitKu");
+            $table->string('gateway_ref', 100)->nullable();
 
-            $table->foreignId('plan_id')
-                ->constrained('subscription_plans')
-                ->onDelete('cascade');
+            $table->decimal('min_amount', 12, 2);
 
-            $table->enum('membership_status', ['active', 'expired', 'cancelled'])->default("active");
+            $table->enum('payment_status', ['pending', 'success', 'failed']);
 
-            $table->date('start_date');
-            $table->date('end_date');
-
-            $table->boolean('auto_renew')->default(false);
-            $table->dateTime('cancelled_at')->nullable();
             $table->timestamps();
-
             $table->string('CompanyCode', 32)->nullable();
             $table->tinyInteger('Status')->default(1);
             $table->tinyInteger('IsDeleted')->default(0);
@@ -46,6 +36,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('memberships');
+        // Pastikan nama tabelnya 'payments' (jamak) sesuai dengan fungsi up
+        Schema::dropIfExists('payments');
     }
 };

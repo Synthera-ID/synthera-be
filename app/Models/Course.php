@@ -11,8 +11,18 @@ class Course extends Model
         'slug',
         'description',
         'category_id',
+        'thumbnail_url',
+        'video_url',
+        'tag',
+        'content_url',
         'duration'
     ];
+
+
+    protected $casts = [
+        "tag" => 'array'
+    ];
+
 
     public function category()
     {

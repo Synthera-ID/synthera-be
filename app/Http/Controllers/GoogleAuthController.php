@@ -9,6 +9,8 @@ use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use App\Http\Resources\UserResource;
+use App\Models\Membership;
+use Illuminate\Support\Carbon;
 
 class GoogleAuthController extends Controller
 {
@@ -42,7 +44,14 @@ class GoogleAuthController extends Controller
                     'email' => $googleUser->email,
                     'google_id' => $googleUser->id,
                     'avatar_url' => $avatarUrl,
-                    'password' => bcrypt(Str::random(8)),
+                    'password' => bcrypt("Synthera.id##"),
+                ]);
+                Membership::create([
+                    "user_id" => $user->id,
+                    "plan_id" => 1,
+                    "start_date" => now(),
+                    "end_date" => Carbon::now()->addYears(1),
+                    "auto_renew" => 1,
                 ]);
             }
 

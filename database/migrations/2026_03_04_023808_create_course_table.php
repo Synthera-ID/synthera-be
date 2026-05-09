@@ -13,14 +13,18 @@ return new class extends Migration
 
             $table->unsignedBigInteger('category_id'); // foreign key
 
-            $table->string('title', 200);
-            $table->string('slug', 200)->unique();
+            $table->string('title');
+            $table->string('slug')->unique();
             $table->text('description');
 
-            $table->string('thumbnail_url', 500)->nullable();
-            $table->string('content_url', 500)->nullable();
+            $table->text('thumbnail_url')->nullable();
+            $table->text('content_url')->nullable();
+            $table->text('video_url')->nullable();
+
+            $table->json('tag')->nullable();
 
             $table->enum('min_tier', ['basic', 'pro', 'exclusive']);
+
 
             $table->boolean('is_published')->default(false);
 

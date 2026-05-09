@@ -4,21 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Membership extends Model
+class PlanFeature extends Model
 {
     protected $fillable = [
-        'user_id',
         'plan_id',
-        'status',
-        'start_date',
-        'end_date',
-        'auto_renew',
-        'membership_status'
+        'feature_key',
+        'feature_label',
+        'limit_value',
+        'is_unlimited',
+        'description',
+        'is_active',
     ];
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+
     public function subscription()
     {
         return $this->belongsTo(

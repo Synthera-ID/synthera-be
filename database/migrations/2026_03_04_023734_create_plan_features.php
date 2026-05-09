@@ -11,26 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('memberships', function (Blueprint $table) {
+        Schema::create('plan_features', function (Blueprint $table) {
             $table->id();
-
-            $table->foreignId('user_id')
-                ->constrained()
-                ->onDelete('cascade');
-
-            $table->foreignId('plan_id')
-                ->constrained('subscription_plans')
-                ->onDelete('cascade');
-
-            $table->enum('membership_status', ['active', 'expired', 'cancelled'])->default("active");
-
-            $table->date('start_date');
-            $table->date('end_date');
-
-            $table->boolean('auto_renew')->default(false);
-            $table->dateTime('cancelled_at')->nullable();
+            $table->foreignId('plan_id')->constrained('subscription_plans')->onDelete('cascade');
+            $table->string('feature_key');
+            $table->string('feature_label');
+            $table->integer('limit_value')->nullable();
+            $table->boolean('is_unlimited')->default(false);
+            $table->text('description');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
-
             $table->string('CompanyCode', 32)->nullable();
             $table->tinyInteger('Status')->default(1);
             $table->tinyInteger('IsDeleted')->default(0);
@@ -46,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('memberships');
+        Schema::dropIfExists('plant_features');
     }
 };

@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\SubscriptionPlanController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\TwoFactorController;
+use Illuminate\Support\Facades\Hash;
 
 /*
 |--------------------------------------------------------------------------
@@ -66,27 +67,87 @@ Route::post('/test', function (\Illuminate\Http\Request $request) {
 */
 
 Route::middleware('auth:sanctum')->group(function () {
-    
+    Route::get('/user', function (Request $request) {
+        $user = $request->user()->load('membership.subscription');
+        return new UserResource($user);
+    });
+    Route::patch('/user', function (Request $request) {
 
-     Route::post('/transactions',
-        [TransactionController::class, 'store']);
-    
+        if ($request->type === "change_profile") {
+            $request->validate([
+                'phone' => [
+                    'required',
+                    'regex:/^(08|\+628)[0-9]{8,13}$/',
+                ],
+            ]);
+            $user = $request->user();
+
+            $user->update([
+                'phone' => $request->phone,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Phone updated successfully',
+                'data' => $user,
+            ]);
+        }
+        if ($request->type === "change_password") {
+            $request->validate([
+                'current_password' => ['required'],
+                'new_password' => ['required', 'min:8', 'confirmed'],
+                'type' => ['required']
+            ]);
+
+            $user = $request->user();
+
+            if (!Hash::check($request->current_password, $user->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Current password is incorrect',
+                ], 422);
+            }
+
+            // update password
+            $user->update([
+                'password' => Hash::make($request->new_password),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Password updated successfully',
+            ]);
+        }
+    });
+
+    Route::post('/transactions', [TransactionController::class, 'store']);
+
     Route::get('/payment/{id}', [PaymentController::class, 'show']);
 
-    Route::put('/transactions/{id}',
-        [TransactionController::class, 'update']);
+    Route::put(
+        '/transactions/{id}',
+        [TransactionController::class, 'update']
+    );
 
-    Route::delete('/transactions/{id}',
-        [TransactionController::class, 'destroy']);
+    Route::delete(
+        '/transactions/{id}',
+        [TransactionController::class, 'destroy']
+    );
 
-    Route::post('/2fa/verify',
-        [TwoFactorController::class, 'verify']);
+    Route::post(
+        '/2fa/verify',
+        [TwoFactorController::class, 'verify']
+    );
 
-    Route::post('/2fa/enable',
-        [TwoFactorController::class, 'enable']);
+    Route::post(
+        '/2fa/enable',
+        [TwoFactorController::class, 'enable']
+    );
 
-    Route::post('/2fa/disable',
-        [TwoFactorController::class, 'disable']);
+    Route::post(
+        '/2fa/disable',
+        [TwoFactorController::class, 'disable']
+    );
 });
 
 /*
@@ -97,31 +158,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
-    Route::post('/subscriptions',
-        [SubscriptionPlanController::class, 'store']);
+    Route::post(
+        '/subscriptions',
+        [SubscriptionPlanController::class, 'store']
+    );
 
-    Route::put('/subscriptions/{id}',
-        [SubscriptionPlanController::class, 'update']);
+    Route::put(
+        '/subscriptions/{id}',
+        [SubscriptionPlanController::class, 'update']
+    );
 
-    Route::delete('/subscriptions/{id}',
-        [SubscriptionPlanController::class, 'destroy']);
-});
-
-/*
-|--------------------------------------------------------------------------
-| USER
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-
-    $user = $request->user();
-
-    if (!$user) {
-        return response()->json([
-            'message' => 'Unauthorized.'
-        ], 401);
-    }
-
-    return new UserResource($user);
+    Route::delete(
+        '/subscriptions/{id}',
+        [SubscriptionPlanController::class, 'destroy']
+    );
 });
