@@ -19,6 +19,14 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/transactions', [TransactionController::class, 'index']);
 Route::get('/transactions/{id}', [TransactionController::class, 'show']);
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::put('/transactions/{id}',
+        [TransactionController::class, 'update']);
+
+    Route::delete('/transactions/{id}',
+        [TransactionController::class, 'destroy']);
+});
 
 Route::get('/payments', [PaymentController::class, 'index']);
 Route::get('/payments/{id}', [PaymentController::class, 'show']);
@@ -35,16 +43,43 @@ Route::get('/categories/{id}', [CategoryController::class, 'show']);
 Route::get('/memberships', [MembershipController::class, 'index']);
 Route::get('/memberships/{id}', [MembershipController::class, 'show']);
 
-Route::post('/payment', [PaymentController::class, 'create']);
+Route::post('/payment',[PaymentController::class, 'postPayment']);
 Route::get('/payment', [PaymentController::class, 'index']);
 Route::get('/payment/{id}', [PaymentController::class, 'show']);
 Route::post('/payment/callback', [PaymentController::class, 'callback']);
+Route::get('/subscriptions', [SubscriptionPlanController::class, 'index']);
+Route::get('/subscriptions/{id}', [SubscriptionPlanController::class, 'show']);
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::post('/subscriptions', [SubscriptionPlanController::class, 'store']);
+
+    Route::put('/subscriptions/{id}',
+        [SubscriptionPlanController::class, 'update']);
+
+    Route::delete('/subscriptions/{id}',
+        [SubscriptionPlanController::class, 'destroy']);
+});
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/2fa/verify', [TwoFactorController::class, 'verify']);
     Route::post('/2fa/enable', [TwoFactorController::class, 'enable']);
     Route::post('/2fa/disable', [TwoFactorController::class, 'disable']);
 });
+
+
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+
+    Route::post('/subscriptions',
+        [SubscriptionPlanController::class, 'store']);
+
+    Route::put('/subscriptions/{id}',
+        [SubscriptionPlanController::class, 'update']);
+
+    Route::delete('/subscriptions/{id}',
+        [SubscriptionPlanController::class, 'destroy']);
+});
+
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

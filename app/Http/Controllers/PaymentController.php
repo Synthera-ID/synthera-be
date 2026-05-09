@@ -87,7 +87,7 @@ class PaymentController extends Controller
                 $callbackUrl,
                 $returnUrl,
                 $expiryPeriod,
-                $duitku
+                $duitku,
             ) {
                 $transaction = Transaction::create([
                     'invoice_code' => $merchantOrderId,
