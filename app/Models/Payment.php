@@ -22,6 +22,6 @@ class Payment extends Model
     'CreatedBy',
     'CreatedDate',
     'LastUpdateBy',
-    'LastUpdateDate'
+    'LastUpdateDate',
 ];
 }

@@ -69,14 +69,18 @@ class DuitkuService
     // Validasi signature yang dikirim Duitku ke Callback kita
     public function validateCallbackSignature($merchantCode, $amount, $merchantOrderId, $signature)
     {
-        $calcSignature = md5($merchantCode . $amount . $merchantOrderId . $this->apiKey());
+        // Poin 1: Validasi Signature Aktif
+        $calcSignature = md5($this->merchantCode() . $amount . $merchantOrderId . $this->apiKey());
         return $signature === $calcSignature;
     }
 
     // Fungsi untuk menembak API Duitku (Inquiry)
     public function createInquiry(array $payload)
     {
-        $url = $this->baseUrl() . '/webapi/api/merchant/v2/inquiry';
+        // Mengikuti settingan .env (Sandbox / Production)
+        $url = config('services.duitku.env') === 'sandbox' 
+            ? 'https://sandbox.duitku.com/webapi/api/merchant/v2/inquiry'
+            : 'https://passport.duitku.com/webapi/api/merchant/v2/inquiry';
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
@@ -104,8 +108,12 @@ class DuitkuService
             'signature' => $signature
         ];
 
-        $url = $this->baseUrl() . '/webapi/api/merchant/transactionStatus';
-        $response = Http::timeout($this->timeout())->post($url, $payload);
+        // PERBAIKAN DI SINI: Agar URL menyesuaikan DUITKU_ENV
+        $url = config('services.duitku.env') === 'sandbox'
+            ? 'https://sandbox.duitku.com/webapi/api/merchant/transactionStatus'
+            : 'https://passport.duitku.com/webapi/api/merchant/transactionStatus';
+
+        $response = Http::post($url, $payload);
 
         if (! $response->successful()) {
             throw new RuntimeException(
