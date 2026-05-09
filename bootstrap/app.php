@@ -1,8 +1,10 @@
 <?php
 
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -11,10 +13,26 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
-  ->withMiddleware(function ($middleware) {
+
+    ->withMiddleware(function (Middleware $middleware): void {
+
     $middleware->alias([
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
     ]);
+
+    $middleware->validateCsrfTokens(except: [
+        'api/auth/*',
+        'api/login',
+    ]);
+
+    $middleware->redirectGuestsTo(fn(Request $request) => null);
 })
-    
-    ->withExceptions(function (Exceptions $exceptions): void {})->create();
+    ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Token tidak valid atau tidak ditemukan.',
+            ], 401);
+        });
+    })->create();
+

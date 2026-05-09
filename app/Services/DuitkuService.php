@@ -3,9 +3,39 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Writer;
+
+use RuntimeException;
 
 class DuitkuService
 {
+    public function generateQr($data, $invoice): string
+    {
+
+        $directory = public_path('qrcodes');
+
+        if (!file_exists($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
+        $renderer = new ImageRenderer(
+            new RendererStyle(300),
+            new SvgImageBackEnd()
+        );
+
+        $writer = new Writer($renderer);
+
+        $fileName = 'qr_' . $invoice . '.svg';
+        $path = $directory . '/' . $fileName;
+
+        $writer->writeFile($data, $path);
+
+        return asset('qrcodes/' . $fileName);
+    }
+
     public function merchantCode()
     {
         return config('services.duitku.merchant_code');
@@ -14,6 +44,20 @@ class DuitkuService
     public function apiKey()
     {
         return config('services.duitku.api_key');
+    }
+
+    private function baseUrl(): string
+    {
+        $isProduction = (bool) config('services.duitku.is_production', false);
+
+        return $isProduction
+            ? 'https://passport.duitku.com'
+            : 'https://sandbox.duitku.com';
+    }
+
+    private function timeout(): int
+    {
+        return max(1, (int) config('services.duitku.timeout', 30));
     }
 
     // Menghitung signature untuk request ke Duitku
@@ -40,16 +84,24 @@ class DuitkuService
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
-        ])->post($url, $payload);
+        ])
+            ->timeout($this->timeout())
+            ->post($url, $payload);
 
-        return $response->json();
+        if (!$response->successful()) {
+            throw new RuntimeException(
+                sprintf('Duitku inquiry gagal. HTTP %d: %s', $response->status(), $response->body())
+            );
+        }
+
+        return $response->json() ?? [];
     }
 
     // Fungsi untuk cek status transaksi secara manual
     public function checkTransactionStatus($merchantOrderId)
     {
         $signature = md5($this->merchantCode() . $merchantOrderId . $this->apiKey());
-        
+
         $payload = [
             'merchantCode' => $this->merchantCode(),
             'merchantOrderId' => $merchantOrderId,
@@ -63,6 +115,12 @@ class DuitkuService
 
         $response = Http::post($url, $payload);
 
-        return $response->json();
+        if (! $response->successful()) {
+            throw new RuntimeException(
+                sprintf('Duitku status check gagal. HTTP %d: %s', $response->status(), $response->body())
+            );
+        }
+
+        return $response->json() ?? [];
     }
 }
