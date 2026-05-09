@@ -52,6 +52,12 @@ Route::get('/payments/{id}', [PaymentController::class, 'show']);
 
 Route::post('/payment', [PaymentController::class, 'postPayment']);
 Route::post('/payment/callback', [PaymentController::class, 'callback']);
+Route::post('/test', function (\Illuminate\Http\Request $request) {
+    return response()->json([
+        'success' => true,
+        'data' => $request->all()
+    ]);
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -60,7 +66,11 @@ Route::post('/payment/callback', [PaymentController::class, 'callback']);
 */
 
 Route::middleware('auth:sanctum')->group(function () {
+    
 
+     Route::post('/transactions',
+        [TransactionController::class, 'store']);
+    
     Route::get('/payment/{id}', [PaymentController::class, 'show']);
 
     Route::put('/transactions/{id}',

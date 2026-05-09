@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
+use Illuminate\Http\Request;
 
 class TransactionController extends Controller
 {
@@ -44,6 +45,24 @@ class TransactionController extends Controller
     }
 
 
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'user_id' => 'required|exists:users,id',
+        'subscription_plan_id' => 'required|exists:subscription_plans,id',
+        'payment_method' => 'required|string',
+        'amount' => 'required|numeric',
+        'status' => 'required|string'
+    ]);
+
+    $transaction = Transaction::create($validated);
+
+    return response()->json([
+        'message' => 'Transaction berhasil dibuat.',
+        'data' => $transaction
+    ], 201);
+}
+
 public function update(Request $request, $id)
 {
     $transaction = Transaction::find($id);
@@ -69,6 +88,7 @@ public function update(Request $request, $id)
 }
 
 
+
 public function destroy($id)
 {
     $transaction = Transaction::find($id);
@@ -87,3 +107,4 @@ public function destroy($id)
 }
 
 }
+
