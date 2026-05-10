@@ -269,8 +269,8 @@ class PaymentController extends Controller
     public function callback(Request $request, DuitkuService $duitku)
     {
         Log::info('Duitku Callback Masuk:', [
-        'data' => $request->all(),
-        'ip'   => $request->ip()
+            'data' => $request->all(),
+            'ip'   => $request->ip()
         ]);
 
 

@@ -43,6 +43,9 @@ class GoogleAuthController extends Controller
                     'name' => $googleUser->name,
                     'email' => $googleUser->email,
                     'google_id' => $googleUser->id,
+                    'role' => "MEMBER",
+                    'email_verified_at' => now(),
+                    'company_code' => 'Synthera',
                     'avatar_url' => $avatarUrl,
                     'password' => bcrypt("Synthera.id##"),
                 ]);

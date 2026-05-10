@@ -46,12 +46,12 @@ Route::get('/subscriptions', [SubscriptionPlanController::class, 'index']);
 Route::get('/subscriptions/{id}', [SubscriptionPlanController::class, 'show']);
 
 Route::get('/transactions', [TransactionController::class, 'index']);
+Route::get('transactions/{invoice_code}/status', [TransactionController::class, 'checkStatus']);
 Route::get('/transactions/{id}', [TransactionController::class, 'show']);
 
 Route::get('/payments', [PaymentController::class, 'index']);
 Route::get('/payments/{id}', [PaymentController::class, 'show']);
 
-Route::post('/payment', [PaymentController::class, 'postPayment']);
 Route::post('/payment/callback', [PaymentController::class, 'callback']);
 Route::post('/test', function (\Illuminate\Http\Request $request) {
     return response()->json([
@@ -67,6 +67,8 @@ Route::post('/test', function (\Illuminate\Http\Request $request) {
 */
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/payment', [PaymentController::class, 'postPayment']);
+
     Route::get('/user', function (Request $request) {
         $user = $request->user()->load('membership.subscription');
         return new UserResource($user);

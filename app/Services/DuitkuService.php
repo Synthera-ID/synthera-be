@@ -7,7 +7,7 @@ use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Writer;
-
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class DuitkuService
@@ -78,10 +78,11 @@ class DuitkuService
     public function createInquiry(array $payload)
     {
         // Mengikuti settingan .env (Sandbox / Production)
-        $url = config('services.duitku.env') === 'sandbox' 
+        $url = config('services.duitku.env') === 'sandbox'
             ? 'https://sandbox.duitku.com/webapi/api/merchant/v2/inquiry'
             : 'https://passport.duitku.com/webapi/api/merchant/v2/inquiry';
 
+        Log::info($url);
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
         ])

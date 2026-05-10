@@ -2,12 +2,28 @@
 
 namespace App\Http\Controllers\Api;
 
+use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
+use App\Models\Payment;
+use App\Models\SubscriptionPlan;
 use App\Models\Transaction;
+use App\Services\DuitkuService;
 use Illuminate\Http\Request;
 
 class TransactionController extends Controller
 {
+    public function checkStatus($invoiceCode)
+    {
+        $getTransaction = Transaction::where("invoice_code", $invoiceCode)->first();
+        if (!$getTransaction) {
+            return response()->json(["message" => "Transaction not found"], 404);
+        }
+        return response()->json(["transaction_status" => $getTransaction->transaction_status], 200);
+    }
+    private function generateMerchantOrderId(): string
+    {
+        return 'SYN-' . now()->format('YmdHis') . '-' . Str::upper(Str::random(6));
+    }
     public function index()
     {
         $transaction = Transaction::with([
@@ -45,27 +61,78 @@ class TransactionController extends Controller
     }
 
 
-    public function store(Request $request)
+    public function store(Request $request, DuitkuService $duitku)
     {
         $user = $request->user();
-        return response()->json($user);
-        $payload = [
-            "user_id" => $user->id,
-        ];
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'subscription_plan_id' => 'required|exists:subscription_plans,id',
-            'payment_method' => 'required|string',
-            'amount' => 'required|numeric',
-            'status' => 'required|string'
+            'plan_id' => ['required', 'integer', 'exists:subscription_plans,id'],
+            'payment_method' => ['nullable', 'string'],
         ]);
 
-        $transaction = Transaction::create($validated);
+        $plan = SubscriptionPlan::findOrFail($validated['plan_id']);
+        $paymentAmount = (int) round((float) $plan->price) + mt_rand(1, 999);
+        $paymentMethod = Payment::where("payment_code", $request->payment_method)->first();
+        if (!$paymentMethod) {
+            return response()->json([
+                'message' => 'Payment method tidak valid.',
+            ], 400);
+        }
+        $merchantOrderId = $this->generateMerchantOrderId();
+        $expiryPeriod = (int) config('services.duitku.expiry_period', 10);
 
-        return response()->json([
-            'message' => 'Transaction berhasil dibuat.',
-            'data' => $transaction
-        ], 201);
+        try {
+            $duitkuPayload = [
+                'merchantCode' => $duitku->merchantCode(),
+                'paymentAmount' => $paymentAmount,
+                'paymentMethod' => $paymentMethod->payment_code,
+                'merchantOrderId' => $merchantOrderId,
+                'productDetails' => 'Pembayaran paket ' . $plan->name . ' - ' . $plan->description,
+                'customerVaName' => 'Synthera User',
+                'email' => (string) $user->email,
+                'itemDetails' => [
+                    [
+                        'name' => $plan->name,
+                        'price' => $paymentAmount,
+                        'quantity' => 1,
+                    ],
+                ],
+                'signature' => $duitku->createInquirySignature($merchantOrderId, $paymentAmount),
+                'expiryPeriod' => $expiryPeriod,
+            ];
+            $duitkuResponse = $duitku->createInquiry($duitkuPayload);
+            $statusCode = (string) ($duitkuResponse['statusCode'] ?? '');
+            if ($statusCode !== '00') {
+                return response()->json([
+                    'message' => 'Gagal membuat pembayaran ke Duitku.',
+                    'duitku' => $duitkuResponse,
+                ], 422);
+            }
+            $qrisUrl = $duitku->generateQr($duitkuResponse['qrString'], $merchantOrderId);
+
+            Transaction::create([
+                'invoice_code' => $duitkuPayload["merchantOrderId"],
+                'user_id' => $user->id,
+                'payment_id' => $paymentMethod->id,
+                'plan_id' => $plan->id,
+                'amount' => $duitkuPayload["paymentAmount"],
+                'final_amount' => $duitkuPayload["paymentAmount"],
+                'transaction_status' => "pending",
+                'discount_amount' => 0,
+                'notes' => $duitkuPayload["productDetails"]
+            ]);
+
+            return response()->json([
+                'message' => 'Transaction berhasil dibuat.',
+                'data' => [
+                    'invoice_code' => $duitkuPayload['merchantOrderId'],
+                    'payment_method' => $duitkuPayload['paymentMethod'],
+                    'amount' => $duitkuPayload['paymentAmount'],
+                    'payment_url' => $qrisUrl,
+                ],
+            ], 201);
+        } catch (\Throwable $th) {
+            return  $th;
+        }
     }
 
     public function update(Request $request, $id)
