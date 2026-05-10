@@ -16,7 +16,7 @@ class AdminMiddleware
     public function handle( $request, Closure $next)
     {
         // Check if the authenticated user is an admin
-        if ($request->user()->role !== 'admin') {
+        if (strtolower($request->user()->role) !== 'admin') {
             return response()->json([
                 'message' => 'Access denied.'
             ], 403);

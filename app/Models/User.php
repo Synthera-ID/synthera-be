@@ -22,19 +22,22 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'google_id',      // Tambahkan ini agar bisa simpan ID Google
-        'phone',          // Tambahkan ini sesuai migration tadi
-        'avatar_url',     // Tambahkan ini (opsional, jika ingin simpan foto profil)
-        'is_active',      // Tambahkan ini agar status bisa diubah
-        'company_code',   // Field dari dosen
-        'status',         // Field dari dosen
-        'created_by',     // Field dari dosen
-        'created_date',   // Field dari dosen
+        'google_id',
+        'phone',
+        'avatar_url',
+        'role',
+        'is_active',
+        'company_code',
+        'status',
+        'is_deleted',
+        'created_by',
+        'created_date',
+        'last_updated_by',
+        'last_updated_date',
         'two_factor_enabled',
         'two_factor_secret',
         'two_factor_confirmed_at',
         'two_factor_verified'
-
     ];
 
     public function membership()

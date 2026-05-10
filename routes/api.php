@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\MembershipController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\SubscriptionPlanController;
 use App\Http\Controllers\Api\TransactionController;
+use App\Http\Controllers\Api\UserManagementController;
 use App\Http\Controllers\TwoFactorController;
 use Illuminate\Support\Facades\Hash;
 
@@ -160,6 +161,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
+    // Subscription management
     Route::post(
         '/subscriptions',
         [SubscriptionPlanController::class, 'store']
@@ -174,4 +176,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         '/subscriptions/{id}',
         [SubscriptionPlanController::class, 'destroy']
     );
+
+    // User management CRUD
+    Route::apiResource('admin/users', UserManagementController::class);
 });
