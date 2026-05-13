@@ -14,13 +14,24 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserManagementController;
 use App\Http\Controllers\TwoFactorController;
 
+// Route::post('/auth/google', [AuthController::class, 'google']);
+// Route::get('/categories', [CategoryController::class, 'index']);
+// Route::get('/categories/{id}', [CategoryController::class, 'show']);
+// Route::get('/memberships/{id}', [MembershipController::class, 'show']);
+// Route::get('/plans/{id}', [SubscriptionPlanController::class, 'show']);
+// Route::get('/subscriptions/{id}', [SubscriptionPlanController::class, 'show']);
+// Route::get('/transactions/{id}', [TransactionController::class, 'show']);
+// Route::get('/payments', [PaymentController::class, 'index']);
+// Route::get('/payments/{id}', [PaymentController::class, 'show']);
+// Route::post('/payment', [PaymentController::class, 'postPayment']);
+// Route::get('/payment/{id}', [PaymentController::class, 'show']);
+
 /*
 |--------------------------------------------------------------------------
 | AUTH
 |--------------------------------------------------------------------------
 */
 
-Route::post('/auth/google', [AuthController::class, 'google']);
 Route::post('/auth/verify', [AuthController::class, 'verify']);
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -67,8 +78,6 @@ Route::delete('/memberships/{id}', [MembershipController::class, 'destroy']);
 
 // Subscription
 Route::get('/plans', [SubscriptionPlanController::class, 'index']);
-Route::get('/plans/{id}', [SubscriptionPlanController::class, 'show']);
-
 Route::get('/subscriptions', [SubscriptionPlanController::class, 'index']);
 Route::get('/subscriptions/{id}', [SubscriptionPlanController::class, 'show']);
 
@@ -81,7 +90,6 @@ Route::get(
     [TransactionController::class, 'checkStatus']
 );
 
-// Payment
 // Payment CRUD
 Route::get('/payments', [PaymentController::class, 'index']);
 Route::get('/payments/{id}', [PaymentController::class, 'show']);

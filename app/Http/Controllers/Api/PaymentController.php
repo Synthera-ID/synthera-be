@@ -19,6 +19,10 @@ class PaymentController extends Controller
             'success' => true,
             'data' => Payment::all()
         ]);
+
+    public function index(Request $request)
+    {
+        return Payment::all();
     }
 
     /*
@@ -72,6 +76,11 @@ class PaymentController extends Controller
     |--------------------------------------------------------------------------
     */
     public function update(Request $request, $id)
+        return Payment::findOrFail($id);
+    }
+
+    
+    public function callback(Request $request, DuitkuService $duitku)
     {
         $payment = Payment::findOrFail($id);
 
@@ -114,4 +123,7 @@ class PaymentController extends Controller
             'message' => 'Payment deleted successfully'
         ]);
     }
+}
+
+
 }
