@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Support\Str;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\PaymentResource;
 use App\Models\Membership;
 use App\Models\Payment;
 use App\Models\SubscriptionPlan;
@@ -21,12 +22,14 @@ class PaymentController extends Controller
 
     public function index(Request $request)
     {
-        return Payment::all();
+        return PaymentResource::collection(
+            Payment::latest()->get()
+        );
     }
 
     public function show($id)
     {
-        return Payment::findOrFail($id);
+        return new PaymentResource(Payment::findOrFail($id));
     }
 
     
