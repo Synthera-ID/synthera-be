@@ -40,9 +40,6 @@ Route::post('/login', [AuthController::class, 'login']);
 | COURSE ROUTES
 |--------------------------------------------------------------------------
 */
-
-Route::prefix('v1')->group(function () {
-
     // Public
     Route::get('/courses', [CourseController::class, 'index']);
     Route::get('/courses/{id}', [CourseController::class, 'show']);
@@ -60,7 +57,6 @@ Route::prefix('v1')->group(function () {
             '/courses/{id}',
             [CourseController::class, 'destroy']
         );
-    });
 
 /*
 |--------------------------------------------------------------------------
