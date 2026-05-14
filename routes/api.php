@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
-use App\Http\Resources\UserResource;
+use Illuminate\Support\Facades\Hash;
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CourseController;
@@ -10,9 +10,9 @@ use App\Http\Controllers\Api\MembershipController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\SubscriptionPlanController;
 use App\Http\Controllers\Api\TransactionController;
+use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserManagementController;
 use App\Http\Controllers\TwoFactorController;
-use Illuminate\Support\Facades\Hash;
 
 // Route::post('/auth/google', [AuthController::class, 'google']);
 // Route::get('/categories', [CategoryController::class, 'index']);
@@ -37,19 +37,63 @@ Route::post('/login', [AuthController::class, 'login']);
 
 /*
 |--------------------------------------------------------------------------
+| COURSE ROUTES
+|--------------------------------------------------------------------------
+*/
+    // Public
+    Route::get('/courses', [CourseController::class, 'index']);
+    Route::get('/courses/{id}', [CourseController::class, 'show']);
+
+    // Admin Only
+
+        Route::post('/courses', [CourseController::class, 'store']);
+
+        Route::put(
+            '/courses/{id}',
+            [CourseController::class, 'update']
+        );
+
+        Route::delete(
+            '/courses/{id}',
+            [CourseController::class, 'destroy']
+        );
+
+/*
+|--------------------------------------------------------------------------
 | PUBLIC ROUTES
 |--------------------------------------------------------------------------
 */
 
-Route::get('/courses', [CourseController::class, 'index']);
-Route::get('/courses/{id}', [CourseController::class, 'show']);
-
-
+// Membership
 Route::get('/memberships', [MembershipController::class, 'index']);
+Route::get('/memberships/{id}', [MembershipController::class, 'show']);
+
+Route::post('/memberships', [MembershipController::class, 'store']);
+Route::put('/memberships/{id}', [MembershipController::class, 'update']);
+Route::delete('/memberships/{id}', [MembershipController::class, 'destroy']);
+
+// Subscription
 Route::get('/plans', [SubscriptionPlanController::class, 'index']);
 Route::get('/subscriptions', [SubscriptionPlanController::class, 'index']);
+Route::get('/subscriptions/{id}', [SubscriptionPlanController::class, 'show']);
+
+// Transaction
 Route::get('/transactions', [TransactionController::class, 'index']);
-Route::get('transactions/{invoice_code}/status', [TransactionController::class, 'checkStatus']);
+Route::get('/transactions/{id}', [TransactionController::class, 'show']);
+
+Route::get(
+    '/transactions/{invoice_code}/status',
+    [TransactionController::class, 'checkStatus']
+);
+
+// Payment CRUD
+Route::get('/payments', [PaymentController::class, 'index']);
+Route::get('/payments/{id}', [PaymentController::class, 'show']);
+
+Route::post('/payments', [PaymentController::class, 'store']);
+Route::put('/payments/{id}', [PaymentController::class, 'update']);
+Route::delete('/payments/{id}', [PaymentController::class, 'destroy']);
+
 Route::post('/payment/callback', [PaymentController::class, 'callback']);
 
 /*
@@ -60,60 +104,47 @@ Route::post('/payment/callback', [PaymentController::class, 'callback']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
-    Route::get('/user', function (Request $request) {
-        $user = $request->user()->load('membership.subscription');
-        return new UserResource($user);
-    });
-    Route::patch('/user', function (Request $request) {
+    /*
+    |--------------------------------------------------------------------------
+    | USER
+    |--------------------------------------------------------------------------
+    */
 
-        if ($request->type === "change_profile") {
-            $request->validate([
-                'phone' => [
-                    'required',
-                    'regex:/^(08|\+628)[0-9]{8,13}$/',
-                ],
-            ]);
-            $user = $request->user();
+    Route::get('/user', [UserController::class, 'index']);
 
-            $user->update([
-                'phone' => $request->phone,
-            ]);
+    Route::patch('/user', [UserController::class, 'update']);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Phone updated successfully',
-                'data' => $user,
-            ]);
-        }
-        if ($request->type === "change_password") {
-            $request->validate([
-                'current_password' => ['required'],
-                'new_password' => ['required', 'min:8', 'confirmed'],
-                'type' => ['required']
-            ]);
+    /*
+    |--------------------------------------------------------------------------
+    | PAYMENT
+    |--------------------------------------------------------------------------
+    */
 
-            $user = $request->user();
+    Route::post('/payment', [PaymentController::class, 'postPayment']);
 
-            if (!Hash::check($request->current_password, $user->password)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Current password is incorrect',
-                ], 422);
-            }
-
-            // update password
-            $user->update([
-                'password' => Hash::make($request->new_password),
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Password updated successfully',
-            ]);
-        }
-    });
+    /*
+    |--------------------------------------------------------------------------
+    | TRANSACTION
+    |--------------------------------------------------------------------------
+    */
 
     Route::post('/transactions', [TransactionController::class, 'store']);
+
+    Route::put(
+        '/transactions/{id}',
+        [TransactionController::class, 'update']
+    );
+
+    Route::delete(
+        '/transactions/{id}',
+        [TransactionController::class, 'destroy']
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | TWO FACTOR AUTH
+    |--------------------------------------------------------------------------
+    */
 
     Route::post(
         '/2fa/verify',
@@ -136,10 +167,64 @@ Route::middleware('auth:sanctum')->group(function () {
 | ADMIN ONLY
 |--------------------------------------------------------------------------
 */
+Route::post('/courses', [CourseController::class, 'store']);
 
-Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+Route::put(
+    '/courses/{id}',
+    [CourseController::class, 'update']
+);
 
-    // Subscription management
+Route::delete(
+    '/courses/{id}',
+    [CourseController::class, 'destroy']
+);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MEMBERSHIP CRUD
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/memberships',
+        [MembershipController::class, 'store']
+    );
+
+    Route::put(
+        '/memberships/{id}',
+        [MembershipController::class, 'update']
+    );
+
+    Route::delete(
+        '/memberships/{id}',
+        [MembershipController::class, 'destroy']
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | PAYMENT CRUD
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post('/payments', [PaymentController::class, 'store']);
+
+    Route::put(
+        '/payments/{id}',
+        [PaymentController::class, 'update']
+    );
+
+    Route::delete(
+        '/payments/{id}',
+        [PaymentController::class, 'destroy']
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | SUBSCRIPTION CRUD
+    |--------------------------------------------------------------------------
+    */
+
     Route::post(
         '/subscriptions',
         [SubscriptionPlanController::class, 'store']
@@ -155,15 +240,13 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         [SubscriptionPlanController::class, 'destroy']
     );
 
-    Route::put(
-        '/transactions/{id}',
-        [TransactionController::class, 'update']
-    );
+    /*
+    |--------------------------------------------------------------------------
+    | USER MANAGEMENT
+    |--------------------------------------------------------------------------
+    */
 
-    Route::delete(
-        '/transactions/{id}',
-        [TransactionController::class, 'destroy']
+    Route::apiResource(
+        'admin/users',
+        UserManagementController::class
     );
-    // User management CRUD
-    Route::apiResource('admin/users', UserManagementController::class);
-});

@@ -2,102 +2,128 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Support\Str;
-
 use App\Http\Controllers\Controller;
-use App\Models\Membership;
 use App\Models\Payment;
-use App\Models\SubscriptionPlan;
-use App\Models\Transaction;
-use App\Models\User;
-use App\Services\DuitkuService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use RuntimeException;
 
 class PaymentController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | GET ALL PAYMENTS
+    |--------------------------------------------------------------------------
+    */
+    public function index()
+    {
+        return response()->json([
+            'success' => true,
+            'data' => Payment::all()
+        ]);
 
     public function index(Request $request)
     {
         return Payment::all();
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | GET DETAIL PAYMENT
+    |--------------------------------------------------------------------------
+    */
     public function show($id)
     {
+        $payment = Payment::findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $payment
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CREATE PAYMENT
+    |--------------------------------------------------------------------------
+    */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'payment_method' => 'required|string',
+            'payment_code' => 'required|string',
+            'payment_gateway' => 'required|string',
+            'min_amount' => 'required|numeric',
+            'payment_status' => 'required|string',
+        ]);
+
+        $payment = Payment::create([
+            'payment_method' => $request->payment_method,
+            'payment_code' => $request->payment_code,
+            'payment_gateway' => $request->payment_gateway,
+            'min_amount' => $request->min_amount,
+            'payment_status' => $request->payment_status,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment created successfully',
+            'data' => $payment
+        ], 201);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE PAYMENT
+    |--------------------------------------------------------------------------
+    */
+    public function update(Request $request, $id)
         return Payment::findOrFail($id);
     }
 
     
     public function callback(Request $request, DuitkuService $duitku)
     {
-        $validated = $request->validate([
-            'merchantCode' => ['required', 'string'],
-            'amount' => ['required'],
-            'merchantOrderId' => ['required', 'string'],
-            'signature' => ['required', 'string'],
-            'resultCode' => ['nullable', 'string'],
-            'paymentCode' => ['nullable', 'string'],
-            'reference' => ['nullable', 'string'],
-            'publisherOrderId' => ['nullable', 'string'],
-            'spUserHash' => ['nullable', 'string'],
-            'settlementDate' => ['nullable', 'string'],
-            'issuerCode' => ['nullable', 'string'],
+        $payment = Payment::findOrFail($id);
+
+        $request->validate([
+            'payment_method' => 'required|string',
+            'payment_code' => 'required|string',
+            'payment_gateway' => 'required|string',
+            'min_amount' => 'required|numeric',
+            'payment_status' => 'required|string',
         ]);
 
-        $merchantCode = (string) $validated['merchantCode'];
-        $amount = (string) $validated['amount'];
-        $merchantOrderId = (string) $validated['merchantOrderId'];
-        $signature = (string) $validated['signature'];
-        $resultCode = (string) ($validated['resultCode'] ?? '');
-
-        if ($merchantCode !== $duitku->merchantCode()) {
-            return response()->json([
-                'message' => 'Invalid merchant code.',
-            ], 400);
-        }
-
-        if (!$duitku->validateCallbackSignature($merchantCode, $amount, $merchantOrderId, $signature)) {
-            return response()->json([
-                'message' => 'Invalid callback signature.',
-            ], 400);
-        }
-
-        $transaction = Transaction::where('invoice_code', $merchantOrderId)->first();
-
-        if (!$transaction) {
-            Log::warning('Callback Duitku order tidak ditemukan', [
-                'merchant_order_id' => $merchantOrderId,
-                'reference' => $validated['reference'] ?? null,
-            ]);
-            return response()->json([
-                'message' => 'Order tidak ditemukan.',
-            ], 404);
-        }
-        $statusTrx = $resultCode === '00' ? 'completed' : 'failed';
-        $transaction->update([
-            'transaction_status' => $statusTrx,
+        $payment->update([
+            'payment_method' => $request->payment_method,
+            'payment_code' => $request->payment_code,
+            'payment_gateway' => $request->payment_gateway,
+            'min_amount' => $request->min_amount,
+            'payment_status' => $request->payment_status,
         ]);
-        if ($resultCode === '00') {
-            Membership::updateOrCreate(
-                [
-                    'user_id' => $transaction->user_id,
-                ],
-                [
-                    'plan_id' => $transaction->plan_id,
-                    'membership_status' => 'active',
-                    'start_date' => now(),
-                    'end_date' => now()->addMonth(),
-                ]
-            );
-        }
 
         return response()->json([
-            'message' => 'Pembayaran Berhasil',
+            'success' => true,
+            'message' => 'Payment updated successfully',
+            'data' => $payment
         ]);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE PAYMENT
+    |--------------------------------------------------------------------------
+    */
+    public function destroy($id)
+    {
+        $payment = Payment::findOrFail($id);
+
+        $payment->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment deleted successfully'
+        ]);
+    }
+}
 
 
 }

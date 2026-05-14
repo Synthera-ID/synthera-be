@@ -6,26 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 
 class Course extends Model
 {
+    protected $table = 'courses';
+
     protected $fillable = [
         'title',
         'slug',
         'description',
+        'price',
         'category_id',
-        'thumbnail_url',
-        'video_url',
-        'tag',
-        'content_url',
-        'duration'
+        'min_tier'
     ];
-
-
-    protected $casts = [
-        "tag" => 'array'
-    ];
-
 
     public function category()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class, 'category_id');
     }
 }
