@@ -14,8 +14,28 @@ class Course extends Model
         'description',
         'price',
         'category_id',
-        'min_tier'
+        'min_tier',
+        'thumbnail_url',
+        'content_url',
+        'video_url',
+        'tag',
+        'is_published',
+        'CompanyCode',
+        'Status',
+        'IsDeleted',
+        'CreatedBy',
+        'CreatedDate',
+        'LastUpdateBy',
+        'LastUpdateDate',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'tag' => 'array',
+            'is_published' => 'boolean',
+        ];
+    }
 
     public function category()
     {

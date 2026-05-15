@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\TransactionHistoryResource;
 use App\Models\Payment;
 use App\Models\SubscriptionPlan;
 use App\Models\Transaction;
@@ -20,23 +21,61 @@ class TransactionController extends Controller
         }
         return response()->json(["transaction_status" => $getTransaction->transaction_status], 200);
     }
+
     private function generateMerchantOrderId(): string
     {
         return 'SYN-' . now()->format('YmdHis') . '-' . Str::upper(Str::random(6));
     }
-    public function index()
+
+    /*
+    |--------------------------------------------------------------------------
+    | USER: List own transactions
+    |--------------------------------------------------------------------------
+    */
+    public function index(Request $request)
     {
-        $transaction = Transaction::with([
-            'user',
-            'plan',
-            'payment',
+        $transactions = Transaction::where("user_id", $request->user()->id)->with(['plan','payment'])->latest()->get();
 
+        return TransactionHistoryResource::collection($transactions);
+    }
 
-        ])->latest()->get();
+    /*
+    |--------------------------------------------------------------------------
+    | ADMIN: List ALL transactions (with search, filter, pagination)
+    |--------------------------------------------------------------------------
+    */
+    public function adminIndex(Request $request)
+    {
+        $query = Transaction::with(['user', 'plan', 'payment']);
+
+        // Search by invoice code or user name/email
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('invoice_code', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($uq) use ($search) {
+                      $uq->where('name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Filter by status
+        if ($status = $request->query('status')) {
+            $query->where('transaction_status', $status);
+        }
+
+        $perPage = $request->query('per_page', 20);
+        $transactions = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         return response()->json([
-            'message' => 'Berhasi mengambil data transaksi.',
-            'data' => $transaction
+            'success' => true,
+            'data' => $transactions->items(),
+            'meta' => [
+                'current_page' => $transactions->currentPage(),
+                'last_page' => $transactions->lastPage(),
+                'per_page' => $transactions->perPage(),
+                'total' => $transactions->total(),
+            ],
         ]);
     }
 
@@ -48,14 +87,8 @@ class TransactionController extends Controller
             'payment',
         ])->findOrFail($id);
 
-        if (!$transaction) {
-            return response()->json([
-                'message' => 'Transaksi tidak ditemukan.'
-            ], 404);
-        }
-
         return response()->json([
-            'message' => 'detail transaksi berhasil diambil.',
+            'message' => 'Detail transaksi berhasil diambil.',
             'data' => $transaction
         ]);
     }
@@ -118,7 +151,9 @@ class TransactionController extends Controller
                 'final_amount' => $duitkuPayload["paymentAmount"],
                 'transaction_status' => "pending",
                 'discount_amount' => 0,
-                'notes' => $duitkuPayload["productDetails"]
+                'notes' => $duitkuPayload["productDetails"],
+                'CreatedBy' => $user->name,
+                'CreatedDate' => now(),
             ]);
 
             return response()->json([
@@ -131,7 +166,10 @@ class TransactionController extends Controller
                 ],
             ], 201);
         } catch (\Throwable $th) {
-            return  $th;
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat memproses transaksi.',
+            ], 500);
         }
     }
 
@@ -146,22 +184,23 @@ class TransactionController extends Controller
         }
 
         $validated = $request->validate([
-            'transaction_status' => 'required|string|'
+            'transaction_status' => 'required|string'
         ]);
 
         $transaction->update([
             'transaction_status' => $validated['transaction_status'],
+            'LastUpdateBy' => $request->user()->name ?? 'Synthera',
+            'LastUpdateDate' => now(),
         ]);
 
         return response()->json([
+            'success' => true,
             'message' => 'Status transaksi berhasil diperbarui.',
-            'data' => $transaction
+            'data' => $transaction->fresh()->load(['user', 'plan', 'payment'])
         ]);
     }
 
-
-
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $transaction = Transaction::find($id);
 
@@ -174,6 +213,7 @@ class TransactionController extends Controller
         $transaction->delete();
 
         return response()->json([
+            'success' => true,
             'message' => 'Transaksi berhasil dihapus.'
         ]);
     }

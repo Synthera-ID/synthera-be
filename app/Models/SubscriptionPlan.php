@@ -11,8 +11,28 @@ class SubscriptionPlan extends Model
         'description',
         'price',
         'duration_days',
-        'tier'
+        'tier',
+        'max_courses',
+        'api_daily_limit',
+        'api_rate_limit',
+        'is_active',
+        'CompanyCode',
+        'Status',
+        'IsDeleted',
+        'CreatedBy',
+        'CreatedDate',
+        'LastUpdateBy',
+        'LastUpdateDate',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+            'price' => 'decimal:2',
+        ];
+    }
+
     public function features()
     {
         return $this->hasMany(
@@ -20,6 +40,7 @@ class SubscriptionPlan extends Model
             'plan_id'
         );
     }
+
     public function memberships()
     {
         return $this->hasMany(

@@ -42,6 +42,7 @@ class GoogleAuthController extends Controller
                 $user = User::create([
                     'name' => $googleUser->name,
                     'email' => $googleUser->email,
+                    'is_active' => TRUE,
                     'google_id' => $googleUser->id,
                     'role' => "MEMBER",
                     'email_verified_at' => now(),

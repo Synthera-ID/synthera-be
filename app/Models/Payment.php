@@ -15,6 +15,18 @@ class Payment extends Model
         'payment_gateway',
         'gateway_ref',
         'min_amount',
-        'payment_status'
+        'payment_status',
+        'CompanyCode',
+        'Status',
+        'IsDeleted',
+        'CreatedBy',
+        'CreatedDate',
+        'LastUpdateBy',
+        'LastUpdateDate',
     ];
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
 }
