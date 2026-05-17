@@ -55,8 +55,8 @@ class CourseController extends Controller
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('slug', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('slug', 'like', "%{$search}%");
             });
         }
 
@@ -141,7 +141,6 @@ class CourseController extends Controller
             'title' => 'sometimes|string|max:255',
             'slug' => 'sometimes|unique:courses,slug,' . $id,
             'description' => 'sometimes|string',
-            'price' => 'sometimes|numeric',
             'category_id' => 'sometimes|exists:course_categories,id',
             'min_tier' => 'sometimes|string',
             'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -150,15 +149,23 @@ class CourseController extends Controller
             'tag' => 'nullable|array',
             'is_published' => 'sometimes|boolean',
         ]);
-
         if ($request->hasFile('thumbnail')) {
-            // Delete old thumbnail if exists
+
             if ($course->thumbnail_url) {
-                $oldPath = str_replace('/storage/', '', $course->thumbnail_url);
-                Storage::disk('public')->delete($oldPath);
+                $oldPath = public_path($course->thumbnail_url);
+
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
             }
-            $path = $request->file('thumbnail')->store('thumbnails', 'public');
-            $validated['thumbnail_url'] = '/storage/' . $path;
+
+            $file = $request->file('thumbnail');
+
+            $filename = time() . '_' . $file->getClientOriginalName();
+
+            $file->move(public_path('thumbnails'), $filename);
+
+            $validated['thumbnail_url'] = '/thumbnails/' . $filename;
         }
 
         // Remove thumbnail key from validated (it's the file, not the url)
