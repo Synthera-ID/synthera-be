@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\CourseResource;
 use App\Models\Course;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class CourseController extends Controller
 {
@@ -100,14 +101,21 @@ class CourseController extends Controller
             'price' => 'required|numeric',
             'category_id' => 'required|exists:course_categories,id',
             'min_tier' => 'required',
-            'thumbnail_url' => 'nullable|string',
+            'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'content_url' => 'nullable|string',
             'video_url' => 'nullable|string',
             'tag' => 'nullable|array',
             'is_published' => 'boolean',
         ]);
 
+        $thumbnailUrl = null;
+        if ($request->hasFile('thumbnail')) {
+            $path = $request->file('thumbnail')->store('thumbnails', 'public');
+            $thumbnailUrl = '/storage/' . $path;
+        }
+
         $course = Course::create(array_merge($validated, [
+            'thumbnail_url' => $thumbnailUrl ?? ($validated['thumbnail_url'] ?? null),
             'is_published' => $validated['is_published'] ?? false,
             'CreatedBy' => $request->user()->name ?? 'Synthera',
             'CreatedDate' => now(),
@@ -136,12 +144,25 @@ class CourseController extends Controller
             'price' => 'sometimes|numeric',
             'category_id' => 'sometimes|exists:course_categories,id',
             'min_tier' => 'sometimes|string',
-            'thumbnail_url' => 'nullable|string',
+            'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'content_url' => 'nullable|string',
             'video_url' => 'nullable|string',
             'tag' => 'nullable|array',
             'is_published' => 'sometimes|boolean',
         ]);
+
+        if ($request->hasFile('thumbnail')) {
+            // Delete old thumbnail if exists
+            if ($course->thumbnail_url) {
+                $oldPath = str_replace('/storage/', '', $course->thumbnail_url);
+                Storage::disk('public')->delete($oldPath);
+            }
+            $path = $request->file('thumbnail')->store('thumbnails', 'public');
+            $validated['thumbnail_url'] = '/storage/' . $path;
+        }
+
+        // Remove thumbnail key from validated (it's the file, not the url)
+        unset($validated['thumbnail']);
 
         $course->update(array_merge($validated, [
             'LastUpdateBy' => $request->user()->name ?? 'Synthera',

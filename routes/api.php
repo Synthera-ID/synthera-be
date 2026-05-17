@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\MembershipController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PlanFeatureController;
 use App\Http\Controllers\Api\SubscriptionPlanController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\UserController;
@@ -141,5 +142,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/courses', [CourseController::class, 'store']);
         Route::put('/courses/{id}', [CourseController::class, 'update']);
         Route::delete('/courses/{id}', [CourseController::class, 'destroy']);
+
+        // Plan Feature Management (CRUD plan features)
+        Route::get('/features', [PlanFeatureController::class, 'adminIndex']);
+        Route::post('/features', [PlanFeatureController::class, 'store']);
+        Route::put('/features/{id}', [PlanFeatureController::class, 'update']);
+        Route::delete('/features/{id}', [PlanFeatureController::class, 'destroy']);
     });
 });
