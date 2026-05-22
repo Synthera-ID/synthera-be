@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Membership;
 use App\Models\Payment;
+use App\Models\Transaction;
 use App\Services\DuitkuService;
 use Illuminate\Http\Request;
 
@@ -49,8 +51,8 @@ class PaymentController extends Controller
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('payment_method', 'like', "%{$search}%")
-                  ->orWhere('payment_code', 'like', "%{$search}%")
-                  ->orWhere('payment_gateway', 'like', "%{$search}%");
+                    ->orWhere('payment_code', 'like', "%{$search}%")
+                    ->orWhere('payment_gateway', 'like', "%{$search}%");
             });
         }
 
@@ -190,8 +192,12 @@ class PaymentController extends Controller
             return response()->json(['message' => 'Invalid signature'], 400);
         }
 
-        $transaction = \App\Models\Transaction::where('invoice_code', $merchantOrderId)->first();
+        $transaction = Transaction::where('invoice_code', $merchantOrderId)->first();
         if ($transaction) {
+            $membership = Membership::where('user_id', $transaction->user_id)->first();
+            $membership->update([
+                'plan_id' => $transaction->plan_id
+            ]);
             $transaction->update([
                 'transaction_status' => $request->resultCode === '00' ? 'paid' : 'failed',
                 'LastUpdateBy' => 'Duitku Callback',
