@@ -2,29 +2,21 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
 use App\Http\Resources\UserResource;
-use App\Http\Controllers\Api\UserController;
+
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\MembershipController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\SubscriptionPlanController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\UserManagementController;
+use App\Http\Controllers\Api\ApiKeyController;
+use App\Http\Controllers\Api\ApiUsageController;
 use App\Http\Controllers\TwoFactorController;
-use Illuminate\Support\Facades\Hash;
-
-// Route::post('/auth/google', [AuthController::class, 'google']);
-// Route::get('/categories', [CategoryController::class, 'index']);
-// Route::get('/categories/{id}', [CategoryController::class, 'show']);
-// Route::get('/memberships/{id}', [MembershipController::class, 'show']);
-// Route::get('/plans/{id}', [SubscriptionPlanController::class, 'show']);
-// Route::get('/subscriptions/{id}', [SubscriptionPlanController::class, 'show']);
-// Route::get('/transactions/{id}', [TransactionController::class, 'show']);
-// Route::get('/payments', [PaymentController::class, 'index']);
-// Route::get('/payments/{id}', [PaymentController::class, 'show']);
-// Route::post('/payment', [PaymentController::class, 'postPayment']);
-// Route::get('/payment/{id}', [PaymentController::class, 'show']);
 
 /*
 |--------------------------------------------------------------------------
@@ -32,8 +24,15 @@ use Illuminate\Support\Facades\Hash;
 |--------------------------------------------------------------------------
 */
 
-Route::post('/auth/verify', [AuthController::class, 'verify']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/auth/verify', [
+    AuthController::class,
+    'verify'
+]);
+
+Route::post('/login', [
+    AuthController::class,
+    'login'
+]);
 
 /*
 |--------------------------------------------------------------------------
@@ -41,19 +40,55 @@ Route::post('/login', [AuthController::class, 'login']);
 |--------------------------------------------------------------------------
 */
 
-Route::get('/courses', [CourseController::class, 'index']);
-Route::get('/courses/{id}', [CourseController::class, 'show']);
+Route::get('/courses', [
+    CourseController::class,
+    'index'
+]);
 
-Route::get('/users/{id}', [UserController::class, 'show']);
-Route::put('/users/{id}', [UserController::class, 'update']);
+Route::get('/courses/{id}', [
+    CourseController::class,
+    'show'
+]);
 
+Route::get('/users/{id}', [
+    UserController::class,
+    'show'
+]);
 
-Route::get('/memberships', [MembershipController::class, 'index']);
-Route::get('/plans', [SubscriptionPlanController::class, 'index']);
-Route::get('/subscriptions', [SubscriptionPlanController::class, 'index']);
-Route::get('/transactions', [TransactionController::class, 'index']);
-Route::get('transactions/{invoice_code}/status', [TransactionController::class, 'checkStatus']);
-Route::post('/payment/callback', [PaymentController::class, 'callback']);
+Route::put('/users/{id}', [
+    UserController::class,
+    'update'
+]);
+
+Route::get('/memberships', [
+    MembershipController::class,
+    'index'
+]);
+
+Route::get('/plans', [
+    SubscriptionPlanController::class,
+    'index'
+]);
+
+Route::get('/subscriptions', [
+    SubscriptionPlanController::class,
+    'index'
+]);
+
+Route::get('/transactions', [
+    TransactionController::class,
+    'index'
+]);
+
+Route::get(
+    '/transactions/{invoice_code}/status',
+    [TransactionController::class, 'checkStatus']
+);
+
+Route::post(
+    '/payment/callback',
+    [PaymentController::class, 'callback']
+);
 
 /*
 |--------------------------------------------------------------------------
@@ -64,18 +99,23 @@ Route::post('/payment/callback', [PaymentController::class, 'callback']);
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/user', function (Request $request) {
-        $user = $request->user()->load('membership.subscription');
+        $user = $request->user()
+            ->load('membership.subscription');
+
         return new UserResource($user);
     });
+
     Route::patch('/user', function (Request $request) {
 
         if ($request->type === "change_profile") {
+
             $request->validate([
                 'phone' => [
                     'required',
                     'regex:/^(08|\+628)[0-9]{8,13}$/',
                 ],
             ]);
+
             $user = $request->user();
 
             $user->update([
@@ -88,25 +128,35 @@ Route::middleware('auth:sanctum')->group(function () {
                 'data' => $user,
             ]);
         }
+
         if ($request->type === "change_password") {
+
             $request->validate([
                 'current_password' => ['required'],
-                'new_password' => ['required', 'min:8', 'confirmed'],
+                'new_password' => [
+                    'required',
+                    'min:8',
+                    'confirmed'
+                ],
                 'type' => ['required']
             ]);
 
             $user = $request->user();
 
-            if (!Hash::check($request->current_password, $user->password)) {
+            if (!Hash::check(
+                $request->current_password,
+                $user->password
+            )) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Current password is incorrect',
                 ], 422);
             }
 
-            // update password
             $user->update([
-                'password' => Hash::make($request->new_password),
+                'password' => Hash::make(
+                    $request->new_password
+                ),
             ]);
 
             return response()->json([
@@ -116,7 +166,32 @@ Route::middleware('auth:sanctum')->group(function () {
         }
     });
 
-    Route::post('/transactions', [TransactionController::class, 'store']);
+    /*
+    |--------------------------------------------------------------------------
+    | API KEY
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/api-key/generate',
+        [ApiKeyController::class, 'generate']
+    );
+
+    Route::get(
+        '/api-key',
+        [ApiKeyController::class, 'index']
+    );
+
+    Route::post('/transactions', [
+        TransactionController::class,
+        'store'
+    ]);
+
+    /*
+    |--------------------------------------------------------------------------
+    | 2FA
+    |--------------------------------------------------------------------------
+    */
 
     Route::post(
         '/2fa/verify',
@@ -140,7 +215,10 @@ Route::middleware('auth:sanctum')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+Route::middleware([
+    'auth:sanctum',
+    'admin'
+])->group(function () {
 
     // Subscription management
     Route::post(
@@ -167,6 +245,40 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         '/transactions/{id}',
         [TransactionController::class, 'destroy']
     );
+
     // User management CRUD
-    Route::apiResource('admin/users', UserManagementController::class);
+    Route::apiResource(
+        'admin/users',
+        UserManagementController::class
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | API USAGE MONITORING
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/api-usage',
+        [ApiUsageController::class, 'index']
+    );
+});
+
+/*
+|--------------------------------------------------------------------------
+| PUBLIC COURSE API (API KEY REQUIRED)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('api.key')->group(function () {
+
+    Route::get(
+        '/public/courses',
+        [CourseController::class, 'index']
+    );
+
+    Route::get(
+        '/public/courses/{id}',
+        [CourseController::class, 'show']
+    );
 });
