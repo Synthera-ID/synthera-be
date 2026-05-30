@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TransactionHistoryResource;
 use App\Models\Payment;
@@ -10,21 +9,23 @@ use App\Models\SubscriptionPlan;
 use App\Models\Transaction;
 use App\Services\DuitkuService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class TransactionController extends Controller
 {
     public function checkStatus($invoiceCode)
     {
-        $getTransaction = Transaction::where("invoice_code", $invoiceCode)->first();
-        if (!$getTransaction) {
-            return response()->json(["message" => "Transaction not found"], 404);
+        $getTransaction = Transaction::where('invoice_code', $invoiceCode)->first();
+        if (! $getTransaction) {
+            return response()->json(['message' => 'Transaction not found'], 404);
         }
-        return response()->json(["transaction_status" => $getTransaction->transaction_status], 200);
+
+        return response()->json(['transaction_status' => $getTransaction->transaction_status], 200);
     }
 
     private function generateMerchantOrderId(): string
     {
-        return 'SYN-' . now()->format('YmdHis') . '-' . Str::upper(Str::random(6));
+        return 'SYN-'.now()->format('YmdHis').'-'.Str::upper(Str::random(6));
     }
 
     /*
@@ -34,7 +35,7 @@ class TransactionController extends Controller
     */
     public function index(Request $request)
     {
-        $transactions = Transaction::where("user_id", $request->user()->id)->with(['plan','payment'])->latest()->get();
+        $transactions = Transaction::where('user_id', $request->user()->id)->with(['plan', 'payment'])->latest()->get();
 
         return TransactionHistoryResource::collection($transactions);
     }
@@ -52,10 +53,10 @@ class TransactionController extends Controller
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('invoice_code', 'like', "%{$search}%")
-                  ->orWhereHas('user', function ($uq) use ($search) {
-                      $uq->where('name', 'like', "%{$search}%")
-                         ->orWhere('email', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -88,11 +89,15 @@ class TransactionController extends Controller
         ])->findOrFail($id);
 
         return response()->json([
-            'message' => 'Detail transaksi berhasil diambil.',
-            'data' => $transaction
-        ]);
+            'message' => 'Get Transaction berhasil diambil.',
+            'data' => [
+                'invoice_code' => $transaction->invoice_code,
+                'payment_method' => $transaction->payment->payment_method,
+                'amount' => $transaction->amount,
+                'payment_string' => $transaction->payment_string,
+            ],
+        ], 201);
     }
-
 
     public function store(Request $request, DuitkuService $duitku)
     {
@@ -104,8 +109,8 @@ class TransactionController extends Controller
 
         $plan = SubscriptionPlan::findOrFail($validated['plan_id']);
         $paymentAmount = (int) round((float) $plan->price) + mt_rand(1, 999);
-        $paymentMethod = Payment::where("payment_code", $request->payment_method)->first();
-        if (!$paymentMethod) {
+        $paymentMethod = Payment::where('payment_code', $request->payment_method)->first();
+        if (! $paymentMethod) {
             return response()->json([
                 'message' => 'Payment method tidak valid.',
             ], 400);
@@ -119,7 +124,7 @@ class TransactionController extends Controller
                 'paymentAmount' => $paymentAmount,
                 'paymentMethod' => $paymentMethod->payment_code,
                 'merchantOrderId' => $merchantOrderId,
-                'productDetails' => 'Pembayaran paket ' . $plan->name . ' - ' . $plan->description,
+                'productDetails' => 'Pembayaran paket '.$plan->name.' - '.$plan->description,
                 'customerVaName' => 'Synthera User',
                 'email' => (string) $user->email,
                 'itemDetails' => [
@@ -140,18 +145,26 @@ class TransactionController extends Controller
                     'duitku' => $duitkuResponse,
                 ], 422);
             }
-            $qrisUrl = $duitku->generateQr($duitkuResponse['qrString'], $merchantOrderId);
+            $paymentString = '';
+            if ($paymentMethod->payment_method === 'qris') {
+                $paymentString = $duitku->generateQr($duitkuResponse['qrString'], $merchantOrderId);
+            }
+
+            if ($paymentMethod->payment_method === 'bank_transfer') {
+                $paymentString = $duitkuResponse['vaNumber'];
+            }
 
             Transaction::create([
-                'invoice_code' => $duitkuPayload["merchantOrderId"],
+                'invoice_code' => $duitkuPayload['merchantOrderId'],
                 'user_id' => $user->id,
                 'payment_id' => $paymentMethod->id,
                 'plan_id' => $plan->id,
-                'amount' => $duitkuPayload["paymentAmount"],
-                'final_amount' => $duitkuPayload["paymentAmount"],
-                'transaction_status' => "pending",
+                'amount' => $duitkuPayload['paymentAmount'],
+                'final_amount' => $duitkuPayload['paymentAmount'],
+                'transaction_status' => 'pending',
                 'discount_amount' => 0,
-                'notes' => $duitkuPayload["productDetails"],
+                'payment_string' => $paymentString,
+                'notes' => $duitkuPayload['productDetails'],
                 'CreatedBy' => $user->name,
                 'CreatedDate' => now(),
             ]);
@@ -160,9 +173,9 @@ class TransactionController extends Controller
                 'message' => 'Transaction berhasil dibuat.',
                 'data' => [
                     'invoice_code' => $duitkuPayload['merchantOrderId'],
-                    'payment_method' => $duitkuPayload['paymentMethod'],
+                    'payment_method' => $paymentMethod->payment_method,
                     'amount' => $duitkuPayload['paymentAmount'],
-                    'payment_url' => $qrisUrl,
+                    'payment_string' => $paymentString,
                 ],
             ], 201);
         } catch (\Throwable $th) {
@@ -177,14 +190,14 @@ class TransactionController extends Controller
     {
         $transaction = Transaction::find($id);
 
-        if (!$transaction) {
+        if (! $transaction) {
             return response()->json([
                 'message' => 'Transaksi tidak ditemukan.',
             ], 404);
         }
 
         $validated = $request->validate([
-            'transaction_status' => 'required|string'
+            'transaction_status' => 'required|string',
         ]);
 
         $transaction->update([
@@ -196,7 +209,7 @@ class TransactionController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Status transaksi berhasil diperbarui.',
-            'data' => $transaction->fresh()->load(['user', 'plan', 'payment'])
+            'data' => $transaction->fresh()->load(['user', 'plan', 'payment']),
         ]);
     }
 
@@ -204,9 +217,9 @@ class TransactionController extends Controller
     {
         $transaction = Transaction::find($id);
 
-        if (!$transaction) {
+        if (! $transaction) {
             return response()->json([
-                'message' => 'Transaksi tidak ditemukan.'
+                'message' => 'Transaksi tidak ditemukan.',
             ], 404);
         }
 
@@ -214,7 +227,7 @@ class TransactionController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Transaksi berhasil dihapus.'
+            'message' => 'Transaksi berhasil dihapus.',
         ]);
     }
 }
