@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 use App\Http\Controllers\Api\AuthController;
+
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\MembershipController;
 use App\Http\Controllers\Api\PaymentController;
@@ -14,6 +15,8 @@ use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserManagementController;
 use App\Http\Controllers\TwoFactorController;
+use App\Http\Controllers\Api\ApiKeyController;
+use App\Http\Controllers\Api\ApiUsageController;
 use App\Http\Controllers\Controller;
 
 /*
@@ -151,4 +154,28 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/features/{id}', [PlanFeatureController::class, 'update']);
         Route::delete('/features/{id}', [PlanFeatureController::class, 'destroy']);
     });
+});
+
+/*
+|--------------------------------------------------------------------------
+| API KEY MANAGEMENT
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::post('/api-keys/generate', [ApiKeyController::class, 'generate']);
+    Route::get('/api-usage', [ApiUsageController::class, 'index']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| PUBLIC COURSE API (API KEY REQUIRED)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('api.key')->group(function () {
+
+    Route::get('/public/courses', [CourseController::class, 'index']);
+    Route::get('/public/courses/{id}', [CourseController::class, 'show']);
 });
