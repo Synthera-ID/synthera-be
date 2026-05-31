@@ -82,7 +82,7 @@ class UserManagementController extends Controller
             'email'        => 'required|email|unique:users,email',
             'password'     => 'required|string|min:8',
             'phone'        => ['nullable', 'regex:/^(08|\+628)[0-9]{8,13}$/'],
-            'role'         => ['required', Rule::in(['admin', 'member'])],
+            'role'         => ['required', Rule::in(['ADMIN', 'MEMBER'])],
             'company_code' => 'nullable|string|max:32',
             'is_active'    => 'boolean',
         ]);
@@ -120,7 +120,7 @@ class UserManagementController extends Controller
             'name'         => 'sometimes|string|max:100',
             'email'        => ['sometimes', 'email', Rule::unique('users')->ignore($user->id)],
             'phone'        => ['nullable', 'regex:/^(08|\+628)[0-9]{8,13}$/'],
-            'role'         => ['sometimes', Rule::in(['admin', 'member'])],
+            'role'         => ['sometimes', Rule::in(['ADMIN', 'MEMBER'])],
             'company_code' => 'nullable|string|max:32',
             'is_active'    => 'sometimes|boolean',
         ]);

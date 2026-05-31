@@ -18,7 +18,7 @@ return new class extends Migration
 
             $table->decimal('min_amount', 12, 2);
 
-            $table->enum('payment_status', ['pending', 'success', 'failed']);
+            $table->boolean('payment_status')->default(1);
 
             $table->timestamps();
             $table->string('CompanyCode', 32)->nullable();

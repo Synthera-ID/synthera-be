@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('avatar_url', 255)->nullable();
             $table->string('google_id')->unique()->nullable();
             // STATUS
-            $table->boolean('is_active')->default(false);
+            $table->boolean('is_active')->default(true);
             $table->dateTime('email_verified_at')->nullable();
 
             // 2FA FIELDS

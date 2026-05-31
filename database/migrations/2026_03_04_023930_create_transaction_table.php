@@ -33,6 +33,7 @@ return new class extends Migration
             $table->decimal('discount_amount', 12, 2);
             $table->decimal('final_amount', 12, 2);
 
+            $table->text('payment_string')->nullable();
             $table->enum('transaction_status', ['pending', 'paid', 'failed', 'refunded', 'completed']);
 
             $table->text('notes')->nullable();

@@ -14,7 +14,22 @@ class PlanFeature extends Model
         'is_unlimited',
         'description',
         'is_active',
+        'CompanyCode',
+        'Status',
+        'IsDeleted',
+        'CreatedBy',
+        'CreatedDate',
+        'LastUpdateBy',
+        'LastUpdateDate',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_unlimited' => 'boolean',
+            'is_active' => 'boolean',
+        ];
+    }
 
     public function subscription()
     {

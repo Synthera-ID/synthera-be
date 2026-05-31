@@ -11,8 +11,10 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\MembershipController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PlanFeatureController;
 use App\Http\Controllers\Api\SubscriptionPlanController;
 use App\Http\Controllers\Api\TransactionController;
+use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserManagementController;
 use App\Http\Controllers\Api\ApiKeyController;
 use App\Http\Controllers\Api\ApiUsageController;
@@ -20,7 +22,7 @@ use App\Http\Controllers\TwoFactorController;
 
 /*
 |--------------------------------------------------------------------------
-| AUTH
+| AUTH (Public)
 |--------------------------------------------------------------------------
 */
 
@@ -36,7 +38,7 @@ Route::post('/login', [
 
 /*
 |--------------------------------------------------------------------------
-| PUBLIC ROUTES
+| COURSE (Public)
 |--------------------------------------------------------------------------
 */
 
@@ -95,7 +97,6 @@ Route::post(
 | AUTHENTICATED ROUTES
 |--------------------------------------------------------------------------
 */
-
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/user', function (Request $request) {
@@ -193,15 +194,21 @@ Route::middleware('auth:sanctum')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::post(
-        '/2fa/verify',
-        [TwoFactorController::class, 'verify']
-    );
+    /*
+    |--------------------------------------------------------------------------
+    | TWO FACTOR AUTH
+    |--------------------------------------------------------------------------
+    */
+    Route::post('/2fa/verify', [TwoFactorController::class, 'verify']);
+    Route::post('/2fa/enable', [TwoFactorController::class, 'enable']);
+    Route::post('/2fa/disable', [TwoFactorController::class, 'disable']);
 
-    Route::post(
-        '/2fa/enable',
-        [TwoFactorController::class, 'enable']
-    );
+    /*
+    |--------------------------------------------------------------------------
+    | ADMIN ROUTES (auth:sanctum + AdminMiddleware)
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(\App\Http\Middleware\AdminMiddleware::class)->prefix('admin')->group(function () {
 
     Route::post(
         '/2fa/disable',
