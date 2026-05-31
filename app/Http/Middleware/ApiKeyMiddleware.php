@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\ApiKey;
 use App\Models\ApiUsageLog;
 use Symfony\Component\HttpFoundation\Response;
-
+// This middleware checks for the presence of a valid API key in the request headers. If a valid API key is found, it allows the request to proceed and logs the API usage. If the API key is missing or invalid, it returns a 401 Unauthorized response. The middleware also updates the last used timestamp of the API key and records details of the API call in the ApiUsageLog for monitoring and analysis purposes.
 class ApiKeyMiddleware
 {
     public function handle(

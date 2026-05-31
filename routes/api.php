@@ -4,10 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
-use App\Http\Resources\UserResource;
-
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\MembershipController;
 use App\Http\Controllers\Api\PaymentController;
@@ -16,81 +13,57 @@ use App\Http\Controllers\Api\SubscriptionPlanController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserManagementController;
-use App\Http\Controllers\Api\ApiKeyController;
-use App\Http\Controllers\Api\ApiUsageController;
 use App\Http\Controllers\TwoFactorController;
+use App\Http\Controllers\Controller;
 
 /*
 |--------------------------------------------------------------------------
 | AUTH (Public)
 |--------------------------------------------------------------------------
 */
-
-Route::post('/auth/verify', [
-    AuthController::class,
-    'verify'
-]);
-
-Route::post('/login', [
-    AuthController::class,
-    'login'
-]);
+Route::post('/auth/verify', [AuthController::class, 'verify']);
+Route::post('/login', [AuthController::class, 'login']);
 
 /*
 |--------------------------------------------------------------------------
 | COURSE (Public)
 |--------------------------------------------------------------------------
 */
+Route::get('/courses', [CourseController::class, 'index']);
+Route::get('/courses/{id}', [CourseController::class, 'show']);
 
-Route::get('/courses', [
-    CourseController::class,
-    'index'
-]);
+/*
+|--------------------------------------------------------------------------
+| MEMBERSHIP (Public)
+|--------------------------------------------------------------------------
+*/
+Route::get('/memberships', [MembershipController::class, 'index']);
+Route::get('/memberships/{id}', [MembershipController::class, 'show']);
 
-Route::get('/courses/{id}', [
-    CourseController::class,
-    'show'
-]);
+/*
+|--------------------------------------------------------------------------
+| SUBSCRIPTION PLANS (Public)
+|--------------------------------------------------------------------------
+*/
+Route::get('/plans', [SubscriptionPlanController::class, 'index']);
+Route::get('/subscriptions', [SubscriptionPlanController::class, 'index']);
+Route::get('/subscriptions/{id}', [SubscriptionPlanController::class, 'show']);
 
-Route::get('/users/{id}', [
-    UserController::class,
-    'show'
-]);
+/*
+|--------------------------------------------------------------------------
+| TRANSACTION STATUS (Public)
+|--------------------------------------------------------------------------
+*/
+Route::get('/transactions/{invoice_code}/status', [TransactionController::class, 'checkStatus']);
 
-Route::put('/users/{id}', [
-    UserController::class,
-    'update'
-]);
-
-Route::get('/memberships', [
-    MembershipController::class,
-    'index'
-]);
-
-Route::get('/plans', [
-    SubscriptionPlanController::class,
-    'index'
-]);
-
-Route::get('/subscriptions', [
-    SubscriptionPlanController::class,
-    'index'
-]);
-
-Route::get('/transactions', [
-    TransactionController::class,
-    'index'
-]);
-
-Route::get(
-    '/transactions/{invoice_code}/status',
-    [TransactionController::class, 'checkStatus']
-);
-
-Route::post(
-    '/payment/callback',
-    [PaymentController::class, 'callback']
-);
+/*
+|--------------------------------------------------------------------------
+| PAYMENT (Public)
+|--------------------------------------------------------------------------
+*/
+Route::get('/payments', [PaymentController::class, 'index']);
+Route::get('/payments/{id}', [PaymentController::class, 'show']);
+Route::post('/payment/callback', [PaymentController::class, 'callback']);
 
 /*
 |--------------------------------------------------------------------------
@@ -99,100 +72,30 @@ Route::post(
 */
 Route::middleware('auth:sanctum')->group(function () {
 
-    Route::get('/user', function (Request $request) {
-        $user = $request->user()
-            ->load('membership.subscription');
-
-        return new UserResource($user);
-    });
-
-    Route::patch('/user', function (Request $request) {
-
-        if ($request->type === "change_profile") {
-
-            $request->validate([
-                'phone' => [
-                    'required',
-                    'regex:/^(08|\+628)[0-9]{8,13}$/',
-                ],
-            ]);
-
-            $user = $request->user();
-
-            $user->update([
-                'phone' => $request->phone,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Phone updated successfully',
-                'data' => $user,
-            ]);
-        }
-
-        if ($request->type === "change_password") {
-
-            $request->validate([
-                'current_password' => ['required'],
-                'new_password' => [
-                    'required',
-                    'min:8',
-                    'confirmed'
-                ],
-                'type' => ['required']
-            ]);
-
-            $user = $request->user();
-
-            if (!Hash::check(
-                $request->current_password,
-                $user->password
-            )) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Current password is incorrect',
-                ], 422);
-            }
-
-            $user->update([
-                'password' => Hash::make(
-                    $request->new_password
-                ),
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Password updated successfully',
-            ]);
-        }
-    });
+    /*
+    |--------------------------------------------------------------------------
+    | USER PROFILE
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/user', [UserController::class, 'index']);
+    Route::patch('/user', [UserController::class, 'update']);
+    Route::post('/logout', [AuthController::class, 'logout']);
 
     /*
     |--------------------------------------------------------------------------
-    | API KEY
+    | PAYMENT (Authenticated)
     |--------------------------------------------------------------------------
     */
-
-    Route::post(
-        '/api-key/generate',
-        [ApiKeyController::class, 'generate']
-    );
-
-    Route::get(
-        '/api-key',
-        [ApiKeyController::class, 'index']
-    );
-
-    Route::post('/transactions', [
-        TransactionController::class,
-        'store'
-    ]);
+    Route::post('/payment', [PaymentController::class, 'postPayment']);
 
     /*
     |--------------------------------------------------------------------------
-    | 2FA
+    | TRANSACTION (User's own)
     |--------------------------------------------------------------------------
     */
+    Route::post('/transactions', [TransactionController::class, 'store']);
+    Route::get('/transactions', [TransactionController::class, 'index']);
+    Route::get('/transactions/{id}', [TransactionController::class, 'show']);
 
     /*
     |--------------------------------------------------------------------------
@@ -210,82 +113,42 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     Route::middleware(\App\Http\Middleware\AdminMiddleware::class)->prefix('admin')->group(function () {
 
-    Route::post(
-        '/2fa/disable',
-        [TwoFactorController::class, 'disable']
-    );
-});
+        // User Management
+        Route::apiResource('users', UserManagementController::class);
 
-/*
-|--------------------------------------------------------------------------
-| ADMIN ONLY
-|--------------------------------------------------------------------------
-*/
+        // Payment Management (CRUD metode pembayaran)
+        Route::get('/payments', [PaymentController::class, 'adminIndex']);
+        Route::post('/payments', [PaymentController::class, 'store']);
+        Route::put('/payments/{id}', [PaymentController::class, 'update']);
+        Route::delete('/payments/{id}', [PaymentController::class, 'destroy']);
 
-Route::middleware([
-    'auth:sanctum',
-    'admin'
-])->group(function () {
+        // Transaction Management (admin sees all transactions)
+        Route::get('/transactions', [TransactionController::class, 'adminIndex']);
+        Route::put('/transactions/{id}', [TransactionController::class, 'update']);
+        Route::delete('/transactions/{id}', [TransactionController::class, 'destroy']);
 
-    // Subscription management
-    Route::post(
-        '/subscriptions',
-        [SubscriptionPlanController::class, 'store']
-    );
+        // Subscription Plan Management (CRUD plans)
+        Route::get('/subscriptions', [SubscriptionPlanController::class, 'adminIndex']);
+        Route::post('/subscriptions', [SubscriptionPlanController::class, 'store']);
+        Route::put('/subscriptions/{id}', [SubscriptionPlanController::class, 'update']);
+        Route::delete('/subscriptions/{id}', [SubscriptionPlanController::class, 'destroy']);
 
-    Route::put(
-        '/subscriptions/{id}',
-        [SubscriptionPlanController::class, 'update']
-    );
+        // Membership Management (CRUD user memberships, upgrade/downgrade)
+        Route::get('/memberships', [MembershipController::class, 'adminIndex']);
+        Route::post('/memberships', [MembershipController::class, 'store']);
+        Route::put('/memberships/{id}', [MembershipController::class, 'update']);
+        Route::delete('/memberships/{id}', [MembershipController::class, 'destroy']);
 
-    Route::delete(
-        '/subscriptions/{id}',
-        [SubscriptionPlanController::class, 'destroy']
-    );
+        // Course Management (Digital Content CRUD)
+        Route::get('/courses', [CourseController::class, 'adminIndex']);
+        Route::post('/courses', [CourseController::class, 'store']);
+        Route::put('/courses/{id}', [CourseController::class, 'update']);
+        Route::delete('/courses/{id}', [CourseController::class, 'destroy']);
 
-    Route::put(
-        '/transactions/{id}',
-        [TransactionController::class, 'update']
-    );
-
-    Route::delete(
-        '/transactions/{id}',
-        [TransactionController::class, 'destroy']
-    );
-
-    // User management CRUD
-    Route::apiResource(
-        'admin/users',
-        UserManagementController::class
-    );
-
-    /*
-    |--------------------------------------------------------------------------
-    | API USAGE MONITORING
-    |--------------------------------------------------------------------------
-    */
-
-    Route::get(
-        '/api-usage',
-        [ApiUsageController::class, 'index']
-    );
-});
-
-/*
-|--------------------------------------------------------------------------
-| PUBLIC COURSE API (API KEY REQUIRED)
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware('api.key')->group(function () {
-
-    Route::get(
-        '/public/courses',
-        [CourseController::class, 'index']
-    );
-
-    Route::get(
-        '/public/courses/{id}',
-        [CourseController::class, 'show']
-    );
+        // Plan Feature Management (CRUD plan features)
+        Route::get('/features', [PlanFeatureController::class, 'adminIndex']);
+        Route::post('/features', [PlanFeatureController::class, 'store']);
+        Route::put('/features/{id}', [PlanFeatureController::class, 'update']);
+        Route::delete('/features/{id}', [PlanFeatureController::class, 'destroy']);
+    });
 });
