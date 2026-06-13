@@ -14,6 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
 
+->withMiddleware(function ($middleware) {
+    $middleware->alias([
+        'api.key' => \App\Http\Middleware\ApiKeyMiddleware::class,
+    ]);
+})
+
     ->withMiddleware(function (Middleware $middleware): void {
 
         $middleware->alias([
@@ -35,3 +41,6 @@ return Application::configure(basePath: dirname(__DIR__))
             ], 401);
         });
     })->create();
+
+    
+
