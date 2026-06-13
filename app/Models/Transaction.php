@@ -6,6 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Transaction extends Model
 {
+    protected static function booted()
+    {
+        static::saved(function ($transaction) {
+            app(\App\Services\InvoiceService::class)->generateInvoiceFromTransaction($transaction);
+        });
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -19,6 +26,11 @@ class Transaction extends Model
     public function payment()
     {
         return $this->belongsTo(Payment::class);
+    }
+
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class);
     }
 
     protected $fillable = [
