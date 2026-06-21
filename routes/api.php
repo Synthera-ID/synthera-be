@@ -186,9 +186,15 @@ Route::middleware('auth:sanctum')->group(function () {
 */
 
 Route::middleware('auth:sanctum')->group(function () {
-
+    // API Key CRUD
+    Route::get('/api-keys', [ApiKeyController::class, 'index']);
     Route::post('/api-keys/generate', [ApiKeyController::class, 'generate']);
+    Route::patch('/api-keys/{id}/status', [ApiKeyController::class, 'updateStatus']);
+    Route::delete('/api-keys/{id}', [ApiKeyController::class, 'destroy']);
+
+    // API Usage
     Route::get('/api-usage', [ApiUsageController::class, 'index']);
+    Route::get('/api-usage/summary', [ApiUsageController::class, 'summary']);
 });
 
 /*

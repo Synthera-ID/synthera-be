@@ -45,10 +45,9 @@ class ApiKeyMiddleware
             'last_used_at' => now()
         ]);
 
-        // save api usage log
         ApiUsageLog::create([
             'user_id' => $key->user_id,
-            'membership_id' => null,
+            'api_key_id' => $key->id,
             'endpoint' => $request->path(),
             'method' => $request->method(),
             'status_code' => $response->status(),

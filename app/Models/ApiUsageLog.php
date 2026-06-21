@@ -13,7 +13,7 @@ class ApiUsageLog extends Model
 {
     protected $fillable = [
         'user_id',
-        'membership_id',
+        'api_key_id',
         'endpoint',
         'method',
         'status_code',
